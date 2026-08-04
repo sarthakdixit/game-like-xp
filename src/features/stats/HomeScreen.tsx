@@ -10,9 +10,10 @@ import { useDomains } from './useDomains';
 
 export interface HomeScreenProps {
   dbFactory?: () => Promise<SqliteClient>;
+  onSelectDomain?: (domainId: string) => void;
 }
 
-export function HomeScreen({ dbFactory }: HomeScreenProps) {
+export function HomeScreen({ dbFactory, onSelectDomain }: HomeScreenProps) {
   const { domains, loading, error } = useDomains(dbFactory);
 
   const axes = domains.map((domain) => ({
@@ -39,7 +40,11 @@ export function HomeScreen({ dbFactory }: HomeScreenProps) {
           </View>
           <View style={styles.list}>
             {domains.map((domain) => (
-              <DomainRow key={domain.id} domain={domain} />
+              <DomainRow
+                key={domain.id}
+                domain={domain}
+                onPress={onSelectDomain ? () => onSelectDomain(domain.id) : undefined}
+              />
             ))}
           </View>
         </>

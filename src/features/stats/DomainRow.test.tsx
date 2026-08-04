@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import type { Domain } from '@/data/schema';
 
@@ -27,5 +27,14 @@ describe('DomainRow', () => {
     await render(<DomainRow domain={{ ...baseDomain, title: null }} />);
 
     expect(screen.getByText('Lv 4')).toBeTruthy();
+  });
+
+  it('calls onPress when tapped', async () => {
+    const onPress = jest.fn();
+    await render(<DomainRow domain={baseDomain} onPress={onPress} />);
+
+    fireEvent.press(screen.getByTestId('domain-row-health'));
+
+    expect(onPress).toHaveBeenCalledTimes(1);
   });
 });

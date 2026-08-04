@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { Domain } from '@/data/schema';
 import { levelToRadarValue } from '@/domain';
@@ -7,14 +7,21 @@ import { colors, domainColor } from '@/ui/theme';
 
 export interface DomainRowProps {
   domain: Domain;
+  onPress?: () => void;
 }
 
-export function DomainRow({ domain }: DomainRowProps) {
+export function DomainRow({ domain, onPress }: DomainRowProps) {
   const color = domainColor(domain.key);
   const radarValue = levelToRadarValue(domain.level);
 
   return (
-    <View style={styles.row} testID={`domain-row-${domain.key}`}>
+    <Pressable
+      onPress={onPress}
+      testID={`domain-row-${domain.key}`}
+      style={styles.row}
+      accessibilityRole="button"
+      accessibilityLabel={`${domain.name}, level ${domain.level}`}
+    >
       <View style={[styles.dot, { backgroundColor: color }]} />
       <Text style={styles.name}>{domain.name}</Text>
       <Text style={styles.level}>
@@ -24,7 +31,7 @@ export function DomainRow({ domain }: DomainRowProps) {
       <View style={styles.barWrap}>
         <ProgressBar testID={`domain-row-${domain.key}-bar`} value={radarValue} color={color} />
       </View>
-    </View>
+    </Pressable>
   );
 }
 

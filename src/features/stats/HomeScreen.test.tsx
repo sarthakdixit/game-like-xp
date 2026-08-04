@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { createMigratedTestDb } from '@/data/testUtils/nodeSqliteClient';
 
@@ -32,5 +32,18 @@ describe('HomeScreen', () => {
 
     expect(screen.getByTestId('home-screen-error')).toBeTruthy();
     expect(screen.queryByTestId('domain-row-health')).toBeNull();
+  });
+
+  it('calls onSelectDomain with the domain id when a row is tapped', async () => {
+    const db = await createMigratedTestDb();
+    const onSelectDomain = jest.fn();
+
+    await render(
+      <HomeScreen dbFactory={() => Promise.resolve(db)} onSelectDomain={onSelectDomain} />,
+    );
+    fireEvent.press(screen.getByTestId('domain-row-health'));
+
+    expect(onSelectDomain).toHaveBeenCalledTimes(1);
+    expect(typeof onSelectDomain.mock.calls[0][0]).toBe('string');
   });
 });

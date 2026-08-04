@@ -1,4 +1,11 @@
-import { applyXpGain, levelForXp, levelToRadarValue, titleForLevel, xpForLevel } from './leveling';
+import {
+  applyXpGain,
+  levelForXp,
+  levelToRadarValue,
+  titleForLevel,
+  xpForLevel,
+  xpProgressToNextLevel,
+} from './leveling';
 
 describe('xpForLevel', () => {
   it('requires 0 xp for level 1', () => {
@@ -144,5 +151,37 @@ describe('levelToRadarValue', () => {
   it('clamps at 100 beyond level 10', () => {
     expect(levelToRadarValue(15)).toBe(100);
     expect(levelToRadarValue(100)).toBe(100);
+  });
+});
+
+describe('xpProgressToNextLevel', () => {
+  it('is 0 ratio at the very start of a level', () => {
+    const progress = xpProgressToNextLevel(1, 0);
+    expect(progress.currentLevelXp).toBe(0);
+    expect(progress.xpToNextLevel).toBe(100);
+    expect(progress.ratio).toBe(0);
+  });
+
+  it('is 1 ratio exactly at the next level threshold', () => {
+    const progress = xpProgressToNextLevel(1, 100);
+    expect(progress.ratio).toBe(1);
+  });
+
+  it('computes a partial ratio mid-level', () => {
+    const progress = xpProgressToNextLevel(2, 150);
+    // level 2 starts at 100xp, level 3 starts at 300xp -> span 200, 50 earned so far
+    expect(progress.currentLevelXp).toBe(50);
+    expect(progress.xpToNextLevel).toBe(200);
+    expect(progress.ratio).toBe(0.25);
+  });
+
+  it('clamps ratio at 1 if xp somehow exceeds the next threshold', () => {
+    const progress = xpProgressToNextLevel(1, 500);
+    expect(progress.ratio).toBe(1);
+  });
+
+  it('clamps ratio at 0 if xp is somehow below the current level floor', () => {
+    const progress = xpProgressToNextLevel(3, 0);
+    expect(progress.ratio).toBe(0);
   });
 });

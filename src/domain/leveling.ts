@@ -76,6 +76,25 @@ export function levelToRadarValue(level: number): number {
   return Math.min(100, (level / RADAR_MAX_LEVEL) * 100);
 }
 
+export interface XpProgress {
+  /** XP earned since the current level started. */
+  currentLevelXp: number;
+  /** XP needed in total to go from the current level to the next. */
+  xpToNextLevel: number;
+  /** `currentLevelXp / xpToNextLevel`, clamped to `[0, 1]`. */
+  ratio: number;
+}
+
+/** How far `xp` has progressed through `level` toward the next one — for an XP bar. */
+export function xpProgressToNextLevel(level: number, xp: number): XpProgress {
+  const floor = xpForLevel(level);
+  const xpToNextLevel = xpForLevel(level + 1) - floor;
+  const currentLevelXp = xp - floor;
+  const ratio = xpToNextLevel === 0 ? 1 : Math.min(1, Math.max(0, currentLevelXp / xpToNextLevel));
+
+  return { currentLevelXp, xpToNextLevel, ratio };
+}
+
 /**
  * Applies an XP gain (e.g. a completed quest) to a domain's progress.
  * `amount` must be non-negative — XP never decreases; use decay.ts for stat neglect instead.
