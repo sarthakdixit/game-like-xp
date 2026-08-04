@@ -1,12 +1,17 @@
 import { createChildStat } from './childStatsRepository';
 import { createDomain } from './domainsRepository';
-import { createHealthImport, getHealthImport } from './healthImportsRepository';
+import {
+  createHealthImport,
+  getHealthImport,
+  getLatestHealthImport,
+} from './healthImportsRepository';
 import { createMigratedTestDb } from '../testUtils/nodeSqliteClient';
 import type { SqliteClient } from '../sqliteClient';
 
 describe('healthImportsRepository', () => {
   let db: SqliteClient;
   let childStatId: string;
+  let secondChildStatId: string;
 
   beforeEach(async () => {
     db = await createMigratedTestDb();
@@ -19,6 +24,14 @@ describe('healthImportsRepository', () => {
       lastActiveAt: '2026-01-01T00:00:00.000Z',
     });
     childStatId = childStat.id;
+    const secondChildStat = await createChildStat(db, {
+      domainId: domain.id,
+      key: 'sleep',
+      name: 'Sleep',
+      sortOrder: 1,
+      lastActiveAt: '2026-01-01T00:00:00.000Z',
+    });
+    secondChildStatId = secondChildStat.id;
   });
 
   it('records a health import for a child stat and date', async () => {
@@ -51,5 +64,32 @@ describe('healthImportsRepository', () => {
     await expect(
       createHealthImport(db, { childStatId, date: '2026-08-04', appliedDelta: 5 }),
     ).rejects.toThrow();
+  });
+
+  describe('getLatestHealthImport', () => {
+    it('returns null when no imports exist', async () => {
+      expect(await getLatestHealthImport(db)).toBeNull();
+    });
+
+    it('returns the only import when just one exists', async () => {
+      const created = await createHealthImport(db, {
+        childStatId,
+        date: '2026-08-04',
+        appliedDelta: 10,
+      });
+
+      expect(await getLatestHealthImport(db)).toEqual(created);
+    });
+
+    it('returns the most recently created import across every child stat', async () => {
+      await createHealthImport(db, { childStatId, date: '2026-08-03', appliedDelta: 6 });
+      const latest = await createHealthImport(db, {
+        childStatId: secondChildStatId,
+        date: '2026-08-04',
+        appliedDelta: 12,
+      });
+
+      expect(await getLatestHealthImport(db)).toEqual(latest);
+    });
   });
 });

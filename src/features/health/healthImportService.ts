@@ -4,13 +4,27 @@ import {
   updateChildStatValue,
 } from '@/data/repositories/childStatsRepository';
 import { getDomainByKey } from '@/data/repositories/domainsRepository';
-import { createHealthImport, getHealthImport } from '@/data/repositories/healthImportsRepository';
+import {
+  createHealthImport,
+  getHealthImport,
+  getLatestHealthImport,
+} from '@/data/repositories/healthImportsRepository';
 import type { SqliteClient } from '@/data/sqliteClient';
 import { CHILD_STAT_MAX_VALUE, CHILD_STAT_MIN_VALUE, mapHealthSampleToStatDeltas } from '@/domain';
 
 const HEALTH_DOMAIN_KEY = 'health';
 const FITNESS_CHILD_STAT_KEY = 'fitness';
 const SLEEP_CHILD_STAT_KEY = 'sleep';
+
+export interface HealthSyncStatus {
+  isAvailable: boolean;
+  permissionStatus: HealthPermissionStatus;
+  /** ISO timestamp of the most recent import, across either child stat. Null if never synced. */
+  lastSyncedAt: string | null;
+  /** Fitness/sleep deltas applied on `lastSyncedAt`'s date. Zero if that stat had no delta that day. */
+  lastSyncFitnessDelta: number;
+  lastSyncSleepDelta: number;
+}
 
 /**
  * Requests Health Connect permission, but only if it isn't already granted.
@@ -97,4 +111,51 @@ export async function importHealthDataForDate(
   if (sleepStat) {
     await applyDeltaIfNotAlreadyImported(db, sleepStat.id, sleepStat.value, date, sleepDelta, now);
   }
+}
+
+/**
+ * Aggregates current Health Connect availability/permission state together
+ * with the most recent import, for display on the Health screen. Read-only —
+ * never requests permission or imports anything itself.
+ */
+export async function getHealthSyncStatus(
+  db: SqliteClient,
+  healthClient: HealthClient,
+): Promise<HealthSyncStatus> {
+  const [isAvailable, permissionStatus, latest] = await Promise.all([
+    healthClient.isAvailable(),
+    healthClient.getPermissionStatus(),
+    getLatestHealthImport(db),
+  ]);
+
+  if (!latest) {
+    return {
+      isAvailable,
+      permissionStatus,
+      lastSyncedAt: null,
+      lastSyncFitnessDelta: 0,
+      lastSyncSleepDelta: 0,
+    };
+  }
+
+  const healthDomain = await getDomainByKey(db, HEALTH_DOMAIN_KEY);
+  const [fitnessStat, sleepStat] = healthDomain
+    ? await Promise.all([
+        getChildStatByDomainAndKey(db, healthDomain.id, FITNESS_CHILD_STAT_KEY),
+        getChildStatByDomainAndKey(db, healthDomain.id, SLEEP_CHILD_STAT_KEY),
+      ])
+    : [null, null];
+
+  const [fitnessImport, sleepImport] = await Promise.all([
+    fitnessStat ? getHealthImport(db, fitnessStat.id, latest.date) : null,
+    sleepStat ? getHealthImport(db, sleepStat.id, latest.date) : null,
+  ]);
+
+  return {
+    isAvailable,
+    permissionStatus,
+    lastSyncedAt: latest.createdAt,
+    lastSyncFitnessDelta: fitnessImport?.appliedDelta ?? 0,
+    lastSyncSleepDelta: sleepImport?.appliedDelta ?? 0,
+  };
 }

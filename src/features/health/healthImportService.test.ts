@@ -9,7 +9,11 @@ import { createFakeHealthClient } from '@/data/testUtils/fakeHealthClient';
 import { createMigratedTestDb } from '@/data/testUtils/nodeSqliteClient';
 import type { SqliteClient } from '@/data/sqliteClient';
 
-import { ensureHealthPermission, importHealthDataForDate } from './healthImportService';
+import {
+  ensureHealthPermission,
+  getHealthSyncStatus,
+  importHealthDataForDate,
+} from './healthImportService';
 
 const DATE = '2026-08-04';
 
@@ -142,5 +146,69 @@ describe('importHealthDataForDate', () => {
     const { fitness, sleep } = await fitnessAndSleepValues(db);
     expect(fitness.value).toBe(6); // 3 + 3
     expect(sleep.value).toBe(24); // 12 + 12
+  });
+});
+
+describe('getHealthSyncStatus', () => {
+  it('reports never synced when no import has ever run', async () => {
+    const db = await setupSeededDb();
+    const client = createFakeHealthClient({}, 'denied');
+
+    const status = await getHealthSyncStatus(db, client);
+
+    expect(status).toEqual({
+      isAvailable: true,
+      permissionStatus: 'denied',
+      lastSyncedAt: null,
+      lastSyncFitnessDelta: 0,
+      lastSyncSleepDelta: 0,
+    });
+  });
+
+  it('reports the last sync time and deltas after a successful import', async () => {
+    const db = await setupSeededDb();
+    const client = createFakeHealthClient({
+      [DATE]: { steps: 9200, sleepMinutes: 450, exerciseMinutes: 45 },
+    });
+    await importHealthDataForDate(db, client, DATE);
+
+    const status = await getHealthSyncStatus(db, client);
+
+    expect(status.isAvailable).toBe(true);
+    expect(status.permissionStatus).toBe('granted');
+    expect(status.lastSyncedAt).not.toBeNull();
+    expect(status.lastSyncFitnessDelta).toBe(14);
+    expect(status.lastSyncSleepDelta).toBe(12);
+  });
+
+  it('reports a zero delta for a stat with no import on the latest synced date', async () => {
+    const db = await setupSeededDb();
+    // only steps produced a delta; sleep/exercise were zero, so no sleep import row exists
+    const client = createFakeHealthClient({
+      [DATE]: { steps: 9200, sleepMinutes: 0, exerciseMinutes: 0 },
+    });
+    await importHealthDataForDate(db, client, DATE);
+
+    const status = await getHealthSyncStatus(db, client);
+
+    expect(status.lastSyncFitnessDelta).toBe(10);
+    expect(status.lastSyncSleepDelta).toBe(0);
+  });
+
+  it('reflects the most recent sync date, not an earlier one', async () => {
+    const db = await setupSeededDb();
+    const day1Client = createFakeHealthClient({
+      '2026-08-03': { steps: 3000, sleepMinutes: 420, exerciseMinutes: 0 },
+    });
+    const day2Client = createFakeHealthClient({
+      [DATE]: { steps: 9200, sleepMinutes: 450, exerciseMinutes: 45 },
+    });
+    await importHealthDataForDate(db, day1Client, '2026-08-03');
+    await importHealthDataForDate(db, day2Client, DATE);
+
+    const status = await getHealthSyncStatus(db, day2Client);
+
+    expect(status.lastSyncFitnessDelta).toBe(14);
+    expect(status.lastSyncSleepDelta).toBe(12);
   });
 });

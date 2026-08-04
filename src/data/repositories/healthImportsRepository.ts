@@ -39,3 +39,12 @@ export async function getHealthImport(
   );
   return row ? healthImportFromRow(row) : null;
 }
+
+/** The most recent import across every child stat — used to show "last synced" on the health screen. */
+export async function getLatestHealthImport(db: SqliteClient): Promise<HealthImport | null> {
+  const row = await db.getFirstAsync<HealthImportRow>(
+    'SELECT * FROM health_imports ORDER BY created_at DESC, rowid DESC LIMIT 1',
+    [],
+  );
+  return row ? healthImportFromRow(row) : null;
+}
