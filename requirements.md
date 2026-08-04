@@ -30,11 +30,16 @@ tracked as stats; completing daily quests earns XP that levels those stats up ov
 
 ## 4. Quests
 
-- 5 active daily quests, one per top-level domain
-- Mixed tone: mostly easy/low-friction quests plus an occasional harder "boss quest" for bigger XP
-- Generation model: a template bank drives day-to-day quests; when the AI-personalization layer
-  ships (Phase 2), it periodically refreshes/customizes the bank when the device is online
-- A starter bank of ~5–10 template quests per domain is drafted as part of the quest-engine batch
+- Every template quest is active every day — no daily rotation or random selection; completing
+  any of them earns XP toward that quest's domain
+- Mixed tone: mostly easy/low-friction quests, plus each domain's template bank includes one
+  harder "boss quest" worth more XP
+- Optional priority tag on a quest template (P1/P2) exists in the data model but currently has no
+  behavioral effect, since nothing is excluded from the daily set anymore
+- Generation model: a template bank drives quests; when the AI-personalization layer ships
+  (Phase 2), it periodically refreshes/customizes the bank when the device is online
+- A starter bank of ~5–10 template quests per domain is drafted as part of the quest-engine batch,
+  with more added over time per user request
 
 ## 5. Data & sync
 

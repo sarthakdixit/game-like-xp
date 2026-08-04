@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { updateDomainProgress } from '@/data/repositories/domainsRepository';
+import { listAllQuests } from '@/data/repositories/questsRepository';
 import { seedDomains } from '@/data/seed';
 import { createFakeFirestoreClient } from '@/data/testUtils/fakeFirestoreClient';
 import type { FirestoreClient } from '@/data/firestoreClient';
@@ -37,13 +38,38 @@ describe('DailyQuestsScreen', () => {
     });
   });
 
-  it('renders exactly one quest card per domain', async () => {
+  it('renders one quest card per template in the bank', async () => {
     const client = await setupSeededDomains();
 
     render(<DailyQuestsScreen uid={UID} firestoreClientFactory={() => client} />);
 
     await waitFor(() => screen.getByTestId('daily-quests-screen'));
-    expect(screen.getAllByTestId(/^quest-card-/)).toHaveLength(5);
+    const allTemplates = await listAllQuests(client, UID);
+    expect(screen.getAllByTestId(/^quest-card-/)).toHaveLength(allTemplates.length);
+  });
+
+  it('renders a heading for every domain', async () => {
+    const client = await setupSeededDomains();
+
+    render(<DailyQuestsScreen uid={UID} firestoreClientFactory={() => client} />);
+
+    await waitFor(() => screen.getByTestId('daily-quests-screen'));
+    for (const name of ['Health', 'Career', 'Relationships', 'Finance', 'Growth']) {
+      expect(screen.getByRole('heading', { name })).toBeInTheDocument();
+    }
+  });
+
+  it('groups quest cards under their domain heading, not interleaved', async () => {
+    const client = await setupSeededDomains();
+
+    const { container } = render(
+      <DailyQuestsScreen uid={UID} firestoreClientFactory={() => client} />,
+    );
+
+    await waitFor(() => screen.getByTestId('daily-quests-screen'));
+    const groups = container.querySelectorAll('.domainGroup');
+    expect(groups).toHaveLength(5);
+    expect(groups[0].querySelector('.domainGroupHeading')).toHaveTextContent('Health');
   });
 
   it('shows the initial progress line', async () => {
@@ -52,7 +78,7 @@ describe('DailyQuestsScreen', () => {
     render(<DailyQuestsScreen uid={UID} firestoreClientFactory={() => client} />);
 
     await waitFor(() => screen.getByTestId('daily-quests-progress'));
-    expect(screen.getByTestId('daily-quests-progress')).toHaveTextContent('0 of 5 complete');
+    expect(screen.getByTestId('daily-quests-progress')).toHaveTextContent('0 of');
   });
 
   it('completing a quest checkbox updates its card and the progress line', async () => {
@@ -65,7 +91,7 @@ describe('DailyQuestsScreen', () => {
     fireEvent.click(firstCheckbox);
 
     await waitFor(() => {
-      expect(screen.getByTestId('daily-quests-progress')).toHaveTextContent('1 of 5 complete');
+      expect(screen.getByTestId('daily-quests-progress')).toHaveTextContent('1 of');
     });
     expect(firstCheckbox).toHaveAttribute('aria-checked', 'true');
   });
@@ -86,7 +112,7 @@ describe('DailyQuestsScreen', () => {
     render(<DailyQuestsScreen uid={UID} firestoreClientFactory={() => client} />);
     await waitFor(() => screen.getAllByRole('checkbox'));
 
-    // Health sorts first (sortOrder 0), so its card is always the first checkbox.
+    // Health sorts first (sortOrder 0), so its first card is always among the first checkboxes.
     const [healthCheckbox] = screen.getAllByRole('checkbox');
     fireEvent.click(healthCheckbox);
 

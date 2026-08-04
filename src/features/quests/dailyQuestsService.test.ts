@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { getDomainByKey } from '@/data/repositories/domainsRepository';
 import { listXpEventsByDomain } from '@/data/repositories/xpEventsRepository';
 import { listDailyQuestsByDate } from '@/data/repositories/dailyQuestsRepository';
-import { getQuestById } from '@/data/repositories/questsRepository';
+import { getQuestById, listAllQuests } from '@/data/repositories/questsRepository';
 import { seedDomains } from '@/data/seed';
 import { createFakeFirestoreClient } from '@/data/testUtils/fakeFirestoreClient';
 import type { FirestoreClient } from '@/data/firestoreClient';
@@ -12,7 +12,6 @@ import { completeDailyQuestAndAwardXp, generateDailyQuests } from './dailyQuests
 
 const UID = 'user-1';
 const DATE = '2026-08-04';
-const DOMAIN_KEYS = ['health', 'career', 'relationships', 'finance', 'growth'];
 
 async function setupSeededDomains(): Promise<FirestoreClient> {
   const client = createFakeFirestoreClient();
@@ -20,24 +19,15 @@ async function setupSeededDomains(): Promise<FirestoreClient> {
   return client;
 }
 
-/** Cycles through `values` repeatedly — generateDailyQuests's selection calls random() three times per domain. */
-function fixedRandom(...values: number[]): () => number {
-  let call = 0;
-  return () => {
-    const value = values[call % values.length];
-    call += 1;
-    return value;
-  };
-}
-
 describe('generateDailyQuests', () => {
-  it('creates exactly one daily quest per domain — no domain skipped', async () => {
+  it('creates exactly one daily quest per quest template — none skipped', async () => {
     const client = await setupSeededDomains();
 
     const quests = await generateDailyQuests(client, UID, DATE);
+    const allTemplates = await listAllQuests(client, UID);
 
-    expect(quests).toHaveLength(5);
-    expect(quests.map((q) => q.domainId).sort()).toEqual([...DOMAIN_KEYS].sort());
+    expect(quests).toHaveLength(allTemplates.length);
+    expect(quests.map((q) => q.questId).sort()).toEqual(allTemplates.map((q) => q.id).sort());
   });
 
   it('seeds the quest template bank itself if it has not been seeded yet', async () => {
@@ -57,7 +47,7 @@ describe('generateDailyQuests', () => {
     const second = await generateDailyQuests(client, UID, DATE);
 
     expect(second.map((q) => q.id).sort()).toEqual(first.map((q) => q.id).sort());
-    expect(await listDailyQuestsByDate(client, UID, DATE)).toHaveLength(5);
+    expect(await listDailyQuestsByDate(client, UID, DATE)).toHaveLength(first.length);
   });
 
   it('is idempotent even when two generation calls race concurrently for the same date', async () => {
@@ -71,7 +61,8 @@ describe('generateDailyQuests', () => {
       generateDailyQuests(client, UID, DATE),
     ]);
 
-    expect(await listDailyQuestsByDate(client, UID, DATE)).toHaveLength(5);
+    const allTemplates = await listAllQuests(client, UID);
+    expect(await listDailyQuestsByDate(client, UID, DATE)).toHaveLength(allTemplates.length);
   });
 
   it('generates a fresh set of quests for a different date', async () => {
@@ -80,32 +71,11 @@ describe('generateDailyQuests', () => {
     await generateDailyQuests(client, UID, '2026-08-03');
     await generateDailyQuests(client, UID, DATE);
 
-    expect(await listDailyQuestsByDate(client, UID, '2026-08-03')).toHaveLength(5);
-    expect(await listDailyQuestsByDate(client, UID, DATE)).toHaveLength(5);
-  });
-
-  it('picks a boss quest for a domain when the injected random rolls under bossChance', async () => {
-    const client = await setupSeededDomains();
-
-    const quests = await generateDailyQuests(client, UID, DATE, { random: fixedRandom(0, 0.9, 0) });
-
-    for (const dailyQuest of quests) {
-      const quest = await getQuestById(client, UID, dailyQuest.questId);
-      expect(quest!.isBoss).toBe(true);
-    }
-  });
-
-  it('picks a normal quest for every domain when the injected random always misses bossChance', async () => {
-    const client = await setupSeededDomains();
-
-    const quests = await generateDailyQuests(client, UID, DATE, {
-      random: fixedRandom(0.99, 0.99, 0),
-    });
-
-    for (const dailyQuest of quests) {
-      const quest = await getQuestById(client, UID, dailyQuest.questId);
-      expect(quest!.isBoss).toBe(false);
-    }
+    const allTemplates = await listAllQuests(client, UID);
+    expect(await listDailyQuestsByDate(client, UID, '2026-08-03')).toHaveLength(
+      allTemplates.length,
+    );
+    expect(await listDailyQuestsByDate(client, UID, DATE)).toHaveLength(allTemplates.length);
   });
 });
 
@@ -117,22 +87,19 @@ describe('completeDailyQuestAndAwardXp', () => {
   });
 
   it('awards the quest xp to the correct domain through the leveling engine', async () => {
-    const [dailyQuest] = await generateDailyQuests(client, UID, DATE, {
-      random: fixedRandom(0.99, 0.99, 0), // force a normal (non-boss) quest for a predictable xp amount
-    });
-    const quest = await getQuestById(client, UID, dailyQuest.questId);
+    const quests = await generateDailyQuests(client, UID, DATE);
+    const dailyQuest = quests.find((q) => q.questId === 'health_walk')!; // a known, non-boss quest
 
     await completeDailyQuestAndAwardXp(client, UID, dailyQuest.id, '2026-08-04T09:00:00.000Z');
 
     const domain = await getDomainByKey(client, UID, dailyQuest.domainId);
-    expect(domain!.xp).toBe(quest!.xpReward);
+    expect(domain!.xp).toBe(15); // health_walk's xpReward
   });
 
   it('leaves every other domain unaffected', async () => {
-    const quests = await generateDailyQuests(client, UID, DATE, {
-      random: fixedRandom(0.99, 0.99, 0),
-    });
-    const [target, ...rest] = quests;
+    const quests = await generateDailyQuests(client, UID, DATE);
+    const target = quests.find((q) => q.questId === 'health_walk')!;
+    const rest = quests.filter((q) => q.domainId !== target.domainId);
 
     await completeDailyQuestAndAwardXp(client, UID, target.id, '2026-08-04T09:00:00.000Z');
 
@@ -144,7 +111,8 @@ describe('completeDailyQuestAndAwardXp', () => {
   });
 
   it('marks the daily quest completed', async () => {
-    const [dailyQuest] = await generateDailyQuests(client, UID, DATE);
+    const quests = await generateDailyQuests(client, UID, DATE);
+    const dailyQuest = quests.find((q) => q.questId === 'health_walk')!;
 
     await completeDailyQuestAndAwardXp(client, UID, dailyQuest.id, '2026-08-04T09:00:00.000Z');
 
@@ -154,9 +122,8 @@ describe('completeDailyQuestAndAwardXp', () => {
   });
 
   it('records an xp event for the audit trail', async () => {
-    const [dailyQuest] = await generateDailyQuests(client, UID, DATE, {
-      random: fixedRandom(0.99, 0.99, 0),
-    });
+    const quests = await generateDailyQuests(client, UID, DATE);
+    const dailyQuest = quests.find((q) => q.questId === 'health_walk')!;
     const quest = await getQuestById(client, UID, dailyQuest.questId);
 
     await completeDailyQuestAndAwardXp(client, UID, dailyQuest.id, '2026-08-04T09:00:00.000Z');
@@ -171,9 +138,8 @@ describe('completeDailyQuestAndAwardXp', () => {
   });
 
   it('reports a level-up when the gain crosses a level boundary', async () => {
-    const [dailyQuest] = await generateDailyQuests(client, UID, DATE, {
-      random: fixedRandom(0, 0.9, 0), // force the boss quest (60xp) — crosses the 50xp level-2 threshold
-    });
+    const quests = await generateDailyQuests(client, UID, DATE);
+    const dailyQuest = quests.find((q) => q.questId === 'health_boss_workout')!; // 60xp — crosses the 50xp level-2 threshold
 
     const result = await completeDailyQuestAndAwardXp(
       client,
@@ -192,7 +158,8 @@ describe('completeDailyQuestAndAwardXp', () => {
   });
 
   it('throws when completing an already-completed daily quest', async () => {
-    const [dailyQuest] = await generateDailyQuests(client, UID, DATE);
+    const quests = await generateDailyQuests(client, UID, DATE);
+    const dailyQuest = quests.find((q) => q.questId === 'health_walk')!;
     await completeDailyQuestAndAwardXp(client, UID, dailyQuest.id, '2026-08-04T09:00:00.000Z');
 
     await expect(

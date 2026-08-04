@@ -4,30 +4,24 @@ import {
   getDailyQuestById,
   listDailyQuestsByDate,
 } from '@/data/repositories/dailyQuestsRepository';
-import {
-  getDomainById,
-  listDomains,
-  updateDomainProgress,
-} from '@/data/repositories/domainsRepository';
-import { getQuestById, listQuestsByDomain } from '@/data/repositories/questsRepository';
+import { getDomainById, updateDomainProgress } from '@/data/repositories/domainsRepository';
+import { getQuestById, listAllQuests } from '@/data/repositories/questsRepository';
 import { createXpEvent } from '@/data/repositories/xpEventsRepository';
 import type { FirestoreClient } from '@/data/firestoreClient';
 import type { DailyQuest } from '@/data/schema';
 import { ensureQuestsSeeded } from '@/data/seedQuests';
 import { applyXpGain } from '@/domain/leveling';
-import { selectDailyQuest, type SelectionOptions } from '@/domain/questSelection';
 
 /**
- * Generates today's daily quests (one per domain) if they don't exist yet
- * for `date`, and returns them either way — idempotent per (user, date), so
- * it's safe to call on every app open. `selectionOptions` lets tests inject
- * a fixed random function; production omits it.
+ * Generates today's daily quests — one per quest template that exists for
+ * the user, i.e. every quest is active every day — if they don't exist yet
+ * for `date`, and returns them either way. Idempotent per (user, date), so
+ * it's safe to call on every app open.
  */
 export async function generateDailyQuests(
   client: FirestoreClient,
   uid: string,
   date: string,
-  selectionOptions?: SelectionOptions,
 ): Promise<DailyQuest[]> {
   const existing = await listDailyQuestsByDate(client, uid, date);
   if (existing.length > 0) {
@@ -35,19 +29,14 @@ export async function generateDailyQuests(
   }
 
   await ensureQuestsSeeded(client, uid);
-  const domains = await listDomains(client, uid);
+  const quests = await listAllQuests(client, uid);
 
   const created: DailyQuest[] = [];
-  for (const domain of domains) {
-    const templates = await listQuestsByDomain(client, uid, domain.id);
-    if (templates.length === 0) {
-      continue;
-    }
-    const chosen = selectDailyQuest(templates, selectionOptions);
+  for (const quest of quests) {
     const dailyQuest = await createDailyQuest(client, uid, {
-      id: `${date}_${domain.id}`,
-      questId: chosen.id,
-      domainId: domain.id,
+      id: `${date}_${quest.id}`,
+      questId: quest.id,
+      domainId: quest.domainId,
       date,
     });
     created.push(dailyQuest);

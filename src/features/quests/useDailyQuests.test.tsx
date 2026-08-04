@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { updateDomainProgress } from '@/data/repositories/domainsRepository';
+import { listAllQuests } from '@/data/repositories/questsRepository';
 import { seedDomains } from '@/data/seed';
 import { createFakeFirestoreClient } from '@/data/testUtils/fakeFirestoreClient';
 import type { FirestoreClient } from '@/data/firestoreClient';
@@ -35,9 +36,10 @@ function Harness({ client }: { client: FirestoreClient }) {
       ) : null}
       <ul>
         {quests.map((quest) => (
-          <li key={quest.dailyQuestId} data-testid={`harness-quest-${quest.domainKey}`}>
+          // Keyed/tagged by dailyQuestId, not domainKey — there are many quests per domain now.
+          <li key={quest.dailyQuestId} data-testid={`harness-quest-${quest.dailyQuestId}`}>
             <button type="button" onClick={() => void completeQuest(quest.dailyQuestId)}>
-              {quest.completed ? 'done' : 'todo'}:{quest.text}:{quest.xpReward}
+              {quest.completed ? 'done' : 'todo'}:{quest.domainKey}:{quest.text}:{quest.xpReward}
             </button>
           </li>
         ))}
@@ -53,20 +55,34 @@ async function setupSeededDomains(): Promise<FirestoreClient> {
 }
 
 describe('useDailyQuests', () => {
-  it('loads exactly one quest per domain, ordered by domain sort order', async () => {
+  it('loads one quest per template, grouped by domain in sort order with no interleaving', async () => {
     const client = await setupSeededDomains();
 
     render(<Harness client={client} />);
 
     await waitFor(() => screen.getByTestId('harness-progress'));
     const items = screen.getAllByTestId(/^harness-quest-/);
-    expect(items.map((el) => el.dataset.testid)).toEqual([
-      'harness-quest-health',
-      'harness-quest-career',
-      'harness-quest-relationships',
-      'harness-quest-finance',
-      'harness-quest-growth',
-    ]);
+    const domainKeys = items.map((el) => el.textContent!.split(':')[1]);
+
+    // Collapse consecutive runs of the same domain key — should match the domain order exactly,
+    // proving every domain's quests are grouped together rather than interleaved.
+    const runs: string[] = [];
+    for (const key of domainKeys) {
+      if (runs[runs.length - 1] !== key) {
+        runs.push(key);
+      }
+    }
+    expect(runs).toEqual(['health', 'career', 'relationships', 'finance', 'growth']);
+  });
+
+  it('generates one daily quest per template in the bank', async () => {
+    const client = await setupSeededDomains();
+
+    render(<Harness client={client} />);
+    await waitFor(() => screen.getByTestId('harness-progress'));
+
+    const allTemplates = await listAllQuests(client, UID);
+    expect(screen.getAllByTestId(/^harness-quest-/)).toHaveLength(allTemplates.length);
   });
 
   it('starts with none completed', async () => {
@@ -75,51 +91,48 @@ describe('useDailyQuests', () => {
     render(<Harness client={client} />);
 
     await waitFor(() => screen.getByTestId('harness-progress'));
-    expect(screen.getByTestId('harness-progress')).toHaveTextContent('0 of 5');
+    expect(screen.getByTestId('harness-progress')).toHaveTextContent('0 of');
   });
 
   it('marks a quest completed and updates the progress count', async () => {
     const client = await setupSeededDomains();
 
     render(<Harness client={client} />);
-    await waitFor(() => screen.getByTestId('harness-quest-health'));
+    await waitFor(() => screen.getByRole('button', { name: /health:Take a 15-minute walk/ }));
 
-    screen.getByTestId('harness-quest-health').querySelector('button')!.click();
+    screen.getByRole('button', { name: /health:Take a 15-minute walk/ }).click();
 
     await waitFor(() => {
-      expect(screen.getByTestId('harness-quest-health')).toHaveTextContent(/^done:/);
+      expect(screen.getByRole('button', { name: /^done:/ })).toBeInTheDocument();
     });
-    expect(screen.getByTestId('harness-progress')).toHaveTextContent('1 of 5');
+    expect(screen.getByTestId('harness-progress')).toHaveTextContent('1 of');
   });
 
   it('does not surface a level-up announcement for an ordinary completion', async () => {
     const client = await setupSeededDomains();
-    // Comfortably mid-level with headroom past even a boss-quest reward (60xp), so this holds
-    // regardless of which template today's random selection happens to pick — starting from 0xp
-    // wouldn't: a boss quest alone (60xp) crosses the 50xp level-2 threshold on its own.
+    // Comfortably mid-level with headroom past even a boss-quest reward (60xp).
     await updateDomainProgress(client, UID, 'health', { level: 5, xp: 800, title: null });
 
     render(<Harness client={client} />);
-    await waitFor(() => screen.getByTestId('harness-quest-health'));
+    await waitFor(() => screen.getByRole('button', { name: /health:Take a 15-minute walk/ }));
 
-    screen.getByTestId('harness-quest-health').querySelector('button')!.click();
+    screen.getByRole('button', { name: /health:Take a 15-minute walk/ }).click();
 
     await waitFor(() => {
-      expect(screen.getByTestId('harness-quest-health')).toHaveTextContent(/^done:/);
+      expect(screen.getByRole('button', { name: /^done:/ })).toBeInTheDocument();
     });
     expect(screen.queryByTestId('harness-levelup')).not.toBeInTheDocument();
   });
 
   it('surfaces a level-up announcement when a completion crosses a level boundary', async () => {
     const client = await setupSeededDomains();
-    // 45xp puts Health one small quest reward (>=10xp) away from the 50xp level-2 threshold,
-    // regardless of which template the day's random selection happens to pick.
+    // 45xp puts Health one small quest reward (health_walk, 15xp) past the 50xp level-2 threshold.
     await updateDomainProgress(client, UID, 'health', { level: 1, xp: 45, title: null });
 
     render(<Harness client={client} />);
-    await waitFor(() => screen.getByTestId('harness-quest-health'));
+    await waitFor(() => screen.getByRole('button', { name: /health:Take a 15-minute walk/ }));
 
-    screen.getByTestId('harness-quest-health').querySelector('button')!.click();
+    screen.getByRole('button', { name: /health:Take a 15-minute walk/ }).click();
 
     await waitFor(() => {
       expect(screen.getByTestId('harness-levelup')).toHaveTextContent(/^Health:2:/);
@@ -130,15 +143,15 @@ describe('useDailyQuests', () => {
     const client = await setupSeededDomains();
 
     render(<Harness client={client} />);
-    await waitFor(() => screen.getByTestId('harness-quest-health'));
+    await waitFor(() => screen.getByRole('button', { name: /health:Take a 15-minute walk/ }));
 
-    const button = screen.getByTestId('harness-quest-health').querySelector('button')!;
+    const button = screen.getByRole('button', { name: /health:Take a 15-minute walk/ });
     button.click();
-    await waitFor(() => expect(screen.getByTestId('harness-progress')).toHaveTextContent('1 of 5'));
+    await waitFor(() => expect(screen.getByTestId('harness-progress')).toHaveTextContent('1 of'));
 
     button.click();
     await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(screen.getByTestId('harness-progress')).toHaveTextContent('1 of 5');
+    expect(screen.getByTestId('harness-progress')).toHaveTextContent('1 of');
   });
 
   it('surfaces an error when the Firestore client fails', async () => {

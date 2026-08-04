@@ -1,13 +1,33 @@
 import type { FirestoreClient } from '@/data/firestoreClient';
 
 import { QuestCard } from './QuestCard';
-import { useDailyQuests } from './useDailyQuests';
+import { useDailyQuests, type QuestDisplay } from './useDailyQuests';
 
 import './DailyQuestsScreen.css';
 
 export interface DailyQuestsScreenProps {
   uid: string;
   firestoreClientFactory?: () => FirestoreClient;
+}
+
+interface DomainGroup {
+  domainKey: string;
+  domainName: string;
+  quests: QuestDisplay[];
+}
+
+/** Splits an already domain-sorted quest list into contiguous per-domain groups, for a heading per domain. */
+function groupByDomain(quests: QuestDisplay[]): DomainGroup[] {
+  const groups: DomainGroup[] = [];
+  for (const quest of quests) {
+    const lastGroup = groups[groups.length - 1];
+    if (lastGroup && lastGroup.domainKey === quest.domainKey) {
+      lastGroup.quests.push(quest);
+    } else {
+      groups.push({ domainKey: quest.domainKey, domainName: quest.domainName, quests: [quest] });
+    }
+  }
+  return groups;
 }
 
 export function DailyQuestsScreen({ uid, firestoreClientFactory }: DailyQuestsScreenProps) {
@@ -34,7 +54,7 @@ export function DailyQuestsScreen({ uid, firestoreClientFactory }: DailyQuestsSc
         <>
           <div className="screenHead">
             <p className="day">Today</p>
-            <h2 className="display">Five quests</h2>
+            <h2 className="display">{totalCount} quests</h2>
           </div>
 
           <p className="questProgress" data-testid="daily-quests-progress">
@@ -54,8 +74,15 @@ export function DailyQuestsScreen({ uid, firestoreClientFactory }: DailyQuestsSc
           ) : null}
 
           <div className="questList">
-            {quests.map((quest) => (
-              <QuestCard key={quest.dailyQuestId} quest={quest} onComplete={completeQuest} />
+            {groupByDomain(quests).map((group) => (
+              <section key={group.domainKey} className="domainGroup">
+                <h3 className="domainGroupHeading">{group.domainName}</h3>
+                <div className="domainGroupQuests">
+                  {group.quests.map((quest) => (
+                    <QuestCard key={quest.dailyQuestId} quest={quest} onComplete={completeQuest} />
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
         </>

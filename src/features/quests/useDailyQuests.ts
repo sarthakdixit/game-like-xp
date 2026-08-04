@@ -80,9 +80,20 @@ export function useDailyQuests(
             completed: dailyQuest.completedAt !== null,
           });
         }
-        display.sort(
-          (a, b) => domainById.get(a.domainId)!.sortOrder - domainById.get(b.domainId)!.sortOrder,
-        );
+        // Grouped by domain first (so the screen can render a heading per domain), then boss
+        // quests last within a domain, then alphabetically for a stable order — there are now
+        // many quests per domain rather than exactly one, so this needs a real, readable order.
+        display.sort((a, b) => {
+          const domainDiff =
+            domainById.get(a.domainId)!.sortOrder - domainById.get(b.domainId)!.sortOrder;
+          if (domainDiff !== 0) {
+            return domainDiff;
+          }
+          if (a.isBoss !== b.isBoss) {
+            return a.isBoss ? 1 : -1;
+          }
+          return a.text.localeCompare(b.text);
+        });
 
         if (!cancelled) {
           setQuests(display);

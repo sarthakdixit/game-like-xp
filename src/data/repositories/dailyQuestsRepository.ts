@@ -8,11 +8,11 @@ export interface CreateDailyQuestInput {
   domainId: string;
   date: string;
   /**
-   * Optional stable id. There is exactly one daily quest per (domain, date),
-   * so callers that want that uniqueness enforced regardless of concurrent
-   * generation — e.g. `${date}_${domainId}` — can pass it here instead of
-   * getting a random generated id. See the domains/quests repositories for
-   * the same idempotent-id pattern.
+   * Optional stable id. There is exactly one daily quest per (quest
+   * template, date), so callers that want that uniqueness enforced
+   * regardless of concurrent generation — e.g. `${date}_${questId}` — can
+   * pass it here instead of getting a random generated id. See the
+   * domains/quests repositories for the same idempotent-id pattern.
    */
   id?: string;
 }
