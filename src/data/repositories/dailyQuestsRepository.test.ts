@@ -70,6 +70,34 @@ describe('dailyQuestsRepository', () => {
     expect(results).toHaveLength(1);
   });
 
+  it('uses a caller-supplied stable id instead of generating one, when given', async () => {
+    const dailyQuest = await createDailyQuest(client, UID, {
+      id: '2026-08-04_health',
+      questId: 'q1',
+      domainId: 'health',
+      date: '2026-08-04',
+    });
+
+    expect(dailyQuest.id).toBe('2026-08-04_health');
+  });
+
+  it('overwrites the same doc instead of duplicating when re-created with the same stable id', async () => {
+    await createDailyQuest(client, UID, {
+      id: '2026-08-04_health',
+      questId: 'q1',
+      domainId: 'health',
+      date: '2026-08-04',
+    });
+    await createDailyQuest(client, UID, {
+      id: '2026-08-04_health',
+      questId: 'q1',
+      domainId: 'health',
+      date: '2026-08-04',
+    });
+
+    expect(await listDailyQuestsByDate(client, UID, '2026-08-04')).toHaveLength(1);
+  });
+
   it('marks a daily quest completed', async () => {
     const created = await createDailyQuest(client, UID, {
       questId: 'q1',

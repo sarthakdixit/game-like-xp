@@ -8,6 +8,13 @@ export interface CreateQuestInput {
   text: string;
   xpReward: number;
   isBoss?: boolean;
+  /**
+   * Optional stable id, e.g. for seeding a fixed template bank idempotently
+   * (re-seeding overwrites the same doc instead of creating a duplicate —
+   * see the domains/child-stats repositories for the same pattern). Runtime-
+   * created quests omit this and get a random generated id.
+   */
+  id?: string;
 }
 
 export async function createQuest(
@@ -15,7 +22,7 @@ export async function createQuest(
   uid: string,
   input: CreateQuestInput,
 ): Promise<Quest> {
-  const id = generateId();
+  const id = input.id ?? generateId();
   const quest: Quest = {
     id,
     domainId: input.domainId,

@@ -79,4 +79,33 @@ describe('questsRepository', () => {
 
     expect(results).toHaveLength(1);
   });
+
+  it('uses a caller-supplied stable id instead of generating one, when given', async () => {
+    const quest = await createQuest(client, UID, {
+      id: 'health_walk',
+      domainId: 'health',
+      text: 'Take a 15-minute walk',
+      xpReward: 15,
+    });
+
+    expect(quest.id).toBe('health_walk');
+    expect(await getQuestById(client, UID, 'health_walk')).toEqual(quest);
+  });
+
+  it('overwrites the same doc instead of duplicating when re-created with the same stable id', async () => {
+    await createQuest(client, UID, {
+      id: 'health_walk',
+      domainId: 'health',
+      text: 'Take a 15-minute walk',
+      xpReward: 15,
+    });
+    await createQuest(client, UID, {
+      id: 'health_walk',
+      domainId: 'health',
+      text: 'Take a 15-minute walk',
+      xpReward: 15,
+    });
+
+    expect(await listAllQuests(client, UID)).toHaveLength(1);
+  });
 });

@@ -7,6 +7,14 @@ export interface CreateDailyQuestInput {
   questId: string;
   domainId: string;
   date: string;
+  /**
+   * Optional stable id. There is exactly one daily quest per (domain, date),
+   * so callers that want that uniqueness enforced regardless of concurrent
+   * generation — e.g. `${date}_${domainId}` — can pass it here instead of
+   * getting a random generated id. See the domains/quests repositories for
+   * the same idempotent-id pattern.
+   */
+  id?: string;
 }
 
 export async function createDailyQuest(
@@ -14,7 +22,7 @@ export async function createDailyQuest(
   uid: string,
   input: CreateDailyQuestInput,
 ): Promise<DailyQuest> {
-  const id = generateId();
+  const id = input.id ?? generateId();
   const dailyQuest: DailyQuest = {
     id,
     questId: input.questId,
