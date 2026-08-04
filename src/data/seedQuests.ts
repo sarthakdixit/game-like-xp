@@ -8,6 +8,8 @@ interface QuestSeed {
   text: string;
   xpReward: number;
   isBoss?: boolean;
+  /** Defaults to 'P1' (always eligible) — 'P2' quests only come up occasionally. */
+  priority?: 'P1' | 'P2';
 }
 
 /**
@@ -52,6 +54,27 @@ const QUEST_SEEDS: QuestSeed[] = [
     xpReward: 60,
     isBoss: true,
   },
+  {
+    key: 'health_workout',
+    domainKey: 'health',
+    text: 'Get a workout in today',
+    xpReward: 15,
+    priority: 'P1',
+  },
+  {
+    key: 'health_low_calorie',
+    domainKey: 'health',
+    text: 'Keep today low-calorie',
+    xpReward: 15,
+    priority: 'P1',
+  },
+  {
+    key: 'health_no_junk_food',
+    domainKey: 'health',
+    text: 'Avoid junk food today',
+    xpReward: 15,
+    priority: 'P1',
+  },
 
   // Career
   { key: 'career_read', domainKey: 'career', text: 'Read one article in your field', xpReward: 15 },
@@ -91,6 +114,20 @@ const QUEST_SEEDS: QuestSeed[] = [
     text: "Finish a project milestone you've been putting off",
     xpReward: 60,
     isBoss: true,
+  },
+  {
+    key: 'career_office',
+    domainKey: 'career',
+    text: 'Work from the office today',
+    xpReward: 15,
+    priority: 'P1',
+  },
+  {
+    key: 'career_interview_prep',
+    domainKey: 'career',
+    text: 'Prepare for an upcoming interview',
+    xpReward: 20,
+    priority: 'P1',
   },
 
   // Relationships
@@ -217,6 +254,20 @@ const QUEST_SEEDS: QuestSeed[] = [
     xpReward: 60,
     isBoss: true,
   },
+  {
+    key: 'growth_course',
+    domainKey: 'growth',
+    text: 'Make progress on a course',
+    xpReward: 20,
+    priority: 'P2',
+  },
+  {
+    key: 'growth_build_project',
+    domainKey: 'growth',
+    text: 'Work on a personal project',
+    xpReward: 20,
+    priority: 'P2',
+  },
 ];
 
 /** Seeds the starter quest template bank for a signed-in user. */
@@ -228,6 +279,7 @@ export async function seedQuests(client: FirestoreClient, uid: string): Promise<
       text: seed.text,
       xpReward: seed.xpReward,
       isBoss: seed.isBoss,
+      priority: seed.priority,
     });
   }
 }

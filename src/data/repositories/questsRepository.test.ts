@@ -39,6 +39,27 @@ describe('questsRepository', () => {
     expect(quest.isBoss).toBe(true);
   });
 
+  it('defaults priority to P1', async () => {
+    const quest = await createQuest(client, UID, {
+      domainId: 'health',
+      text: 'Move for 20 minutes',
+      xpReward: 15,
+    });
+
+    expect(quest.priority).toBe('P1');
+  });
+
+  it('creates a P2 (occasional) quest when requested', async () => {
+    const quest = await createQuest(client, UID, {
+      domainId: 'growth',
+      text: 'Make progress on a course',
+      xpReward: 20,
+      priority: 'P2',
+    });
+
+    expect(quest.priority).toBe('P2');
+  });
+
   it('reads a quest back by id', async () => {
     const created = await createQuest(client, UID, {
       domainId: 'health',

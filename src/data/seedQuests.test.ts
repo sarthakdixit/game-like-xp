@@ -50,6 +50,48 @@ describe('seedQuests', () => {
     const uniqueIds = new Set(quests.map((q) => q.id));
     expect(quests).toHaveLength(uniqueIds.size);
   });
+
+  it('seeds the new Health quests as P1 (always eligible)', async () => {
+    await seedQuests(client, UID);
+
+    const quests = await listQuestsByDomain(client, UID, 'health');
+    const byKey = new Map(quests.map((q) => [q.id, q]));
+
+    expect(byKey.get('health_workout')).toMatchObject({ priority: 'P1' });
+    expect(byKey.get('health_low_calorie')).toMatchObject({ priority: 'P1' });
+    expect(byKey.get('health_no_junk_food')).toMatchObject({ priority: 'P1' });
+  });
+
+  it('seeds the new Career quests as P1 (always eligible)', async () => {
+    await seedQuests(client, UID);
+
+    const quests = await listQuestsByDomain(client, UID, 'career');
+    const byKey = new Map(quests.map((q) => [q.id, q]));
+
+    expect(byKey.get('career_office')).toMatchObject({ priority: 'P1' });
+    expect(byKey.get('career_interview_prep')).toMatchObject({ priority: 'P1' });
+  });
+
+  it('seeds the new Growth quests as P2 (occasional)', async () => {
+    await seedQuests(client, UID);
+
+    const quests = await listQuestsByDomain(client, UID, 'growth');
+    const byKey = new Map(quests.map((q) => [q.id, q]));
+
+    expect(byKey.get('growth_course')).toMatchObject({ priority: 'P2' });
+    expect(byKey.get('growth_build_project')).toMatchObject({ priority: 'P2' });
+  });
+
+  it('defaults every pre-existing quest to P1', async () => {
+    await seedQuests(client, UID);
+
+    const quests = await listAllQuests(client, UID);
+    const legacyQuests = quests.filter(
+      (q) => !['growth_course', 'growth_build_project'].includes(q.id),
+    );
+
+    expect(legacyQuests.every((q) => q.priority === 'P1')).toBe(true);
+  });
 });
 
 describe('ensureQuestsSeeded', () => {

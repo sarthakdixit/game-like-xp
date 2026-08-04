@@ -26,6 +26,8 @@ export interface Quest {
   text: string;
   xpReward: number;
   isBoss: boolean;
+  /** P1 quests are always eligible for the day's pick; P2 quests only come up occasionally. */
+  priority: 'P1' | 'P2';
   createdAt: string;
 }
 

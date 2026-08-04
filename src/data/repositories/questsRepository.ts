@@ -8,6 +8,8 @@ export interface CreateQuestInput {
   text: string;
   xpReward: number;
   isBoss?: boolean;
+  /** Defaults to 'P1' (always eligible) — 'P2' quests only come up occasionally. */
+  priority?: 'P1' | 'P2';
   /**
    * Optional stable id, e.g. for seeding a fixed template bank idempotently
    * (re-seeding overwrites the same doc instead of creating a duplicate —
@@ -29,6 +31,7 @@ export async function createQuest(
     text: input.text,
     xpReward: input.xpReward,
     isBoss: input.isBoss ?? false,
+    priority: input.priority ?? 'P1',
     createdAt: new Date().toISOString(),
   };
 
