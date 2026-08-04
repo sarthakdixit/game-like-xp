@@ -10,19 +10,16 @@ import './DomainRow.css';
 
 export interface DomainRowProps {
   domain: Domain;
+  onSelect?: (domainId: string) => void;
 }
 
-export function DomainRow({ domain }: DomainRowProps) {
+export function DomainRow({ domain, onSelect }: DomainRowProps) {
   const color = domainColor(domain.key);
   const title = domain.title ?? titleForLevel(domain.level);
   const progress = xpProgressToNextLevel(domain.level, domain.xp);
 
-  return (
-    <div
-      className="domainRow"
-      data-testid={`domain-row-${domain.key}`}
-      style={{ '--tag': color } as CSSProperties}
-    >
+  const content = (
+    <>
       <DomainIcon domainKey={domain.key} className="icon" />
       <span className="name">{domain.name}</span>
       <span className="lv">
@@ -31,6 +28,29 @@ export function DomainRow({ domain }: DomainRowProps) {
       <div className="bar">
         <ProgressBar value={progress.ratio * 100} color={color} />
       </div>
-    </div>
+    </>
+  );
+
+  const style = { '--tag': color } as CSSProperties;
+
+  if (!onSelect) {
+    return (
+      <div className="domainRow" data-testid={`domain-row-${domain.key}`} style={style}>
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className="domainRow domainRowButton"
+      data-testid={`domain-row-${domain.key}`}
+      style={style}
+      onClick={() => onSelect(domain.id)}
+      aria-label={`View ${domain.name} details`}
+    >
+      {content}
+    </button>
   );
 }

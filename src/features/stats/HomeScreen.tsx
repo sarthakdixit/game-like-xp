@@ -10,9 +10,10 @@ import './HomeScreen.css';
 export interface HomeScreenProps {
   uid: string;
   firestoreClientFactory?: () => FirestoreClient;
+  onSelectDomain?: (domainId: string) => void;
 }
 
-export function HomeScreen({ uid, firestoreClientFactory }: HomeScreenProps) {
+export function HomeScreen({ uid, firestoreClientFactory, onSelectDomain }: HomeScreenProps) {
   const { domains, loading, error } = useDomains(uid, firestoreClientFactory);
 
   if (loading) {
@@ -45,7 +46,7 @@ export function HomeScreen({ uid, firestoreClientFactory }: HomeScreenProps) {
 
       <div className="domainList">
         {domains.map((domain) => (
-          <DomainRow key={domain.id} domain={domain} />
+          <DomainRow key={domain.id} domain={domain} onSelect={onSelectDomain} />
         ))}
       </div>
     </div>

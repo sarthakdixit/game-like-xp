@@ -1,3 +1,5 @@
+import { BrowserRouter } from 'react-router-dom';
+
 import type { AuthClient } from '@/data/authClient';
 import { getAuthClient } from '@/data/firebaseAuthClient';
 import { getFirestoreClient } from '@/data/firestore';
@@ -33,11 +35,13 @@ export function App({
         ) : !user ? (
           <SignInScreen onSignIn={() => void signIn()} error={error} />
         ) : (
-          <SignedInShell
-            user={user}
-            onSignOut={() => void signOut()}
-            firestoreClientFactory={firestoreClientFactory}
-          />
+          <BrowserRouter>
+            <SignedInShell
+              user={user}
+              onSignOut={() => void signOut()}
+              firestoreClientFactory={firestoreClientFactory}
+            />
+          </BrowserRouter>
         )}
       </div>
     </div>

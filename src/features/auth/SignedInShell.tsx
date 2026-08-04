@@ -1,6 +1,6 @@
 import type { AuthUser } from '@/data/authClient';
 import type { FirestoreClient } from '@/data/firestoreClient';
-import { HomeScreen } from '@/features/stats/HomeScreen';
+import { AppRoutes } from '@/navigation/AppRoutes';
 
 import './SignedInShell.css';
 
@@ -10,7 +10,7 @@ export interface SignedInShellProps {
   firestoreClientFactory?: () => FirestoreClient;
 }
 
-/** The app shell once a user is signed in — an identity strip above the character sheet. */
+/** The app shell once a user is signed in — an identity strip above the routed character sheet. */
 export function SignedInShell({ user, onSignOut, firestoreClientFactory }: SignedInShellProps) {
   return (
     <div className="signedInShell" data-testid="signed-in-shell">
@@ -21,7 +21,7 @@ export function SignedInShell({ user, onSignOut, firestoreClientFactory }: Signe
         </button>
       </div>
 
-      <HomeScreen uid={user.uid} firestoreClientFactory={firestoreClientFactory} />
+      <AppRoutes uid={user.uid} firestoreClientFactory={firestoreClientFactory} />
     </div>
   );
 }

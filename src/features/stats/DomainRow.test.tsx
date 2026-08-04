@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { Domain } from '@/data/schema';
 
@@ -43,5 +43,26 @@ describe('DomainRow', () => {
     render(<DomainRow domain={domain({ key: 'career', name: 'Career' })} />);
 
     expect(screen.getByTestId('domain-row-career')).toBeInTheDocument();
+  });
+
+  it('renders as a plain (non-interactive) row when no onSelect is given', () => {
+    render(<DomainRow domain={domain()} />);
+
+    expect(screen.getByTestId('domain-row-health').tagName).toBe('DIV');
+  });
+
+  it('renders as a clickable button when onSelect is given', () => {
+    render(<DomainRow domain={domain()} onSelect={vi.fn()} />);
+
+    expect(screen.getByTestId('domain-row-health').tagName).toBe('BUTTON');
+  });
+
+  it('calls onSelect with the domain id when clicked', () => {
+    const onSelect = vi.fn();
+    render(<DomainRow domain={domain({ id: 'health-id' })} onSelect={onSelect} />);
+
+    fireEvent.click(screen.getByTestId('domain-row-health'));
+
+    expect(onSelect).toHaveBeenCalledWith('health-id');
   });
 });

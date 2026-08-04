@@ -1,0 +1,26 @@
+.statLine {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12.5px;
+}
+
+.statLine .n {
+  color: var(--ink);
+}
+
+.statLine .v {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.statLine.decay .v {
+  color: var(--seal);
+}
+
+.statLine .note {
+  font-size: 10.5px;
+  color: var(--seal);
+  margin-left: 6px;
+  font-variant: small-caps;
+}

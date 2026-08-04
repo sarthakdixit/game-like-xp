@@ -1,5 +1,5 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 
 import { createFakeFirestoreClient } from '@/data/testUtils/fakeFirestoreClient';
 
@@ -47,5 +47,33 @@ describe('HomeScreen', () => {
     await waitFor(() => {
       expect(screen.getByTestId('home-screen-error')).toBeInTheDocument();
     });
+  });
+
+  it('calls onSelectDomain with the domain id when a row is clicked', async () => {
+    const client = createFakeFirestoreClient();
+    const onSelectDomain = vi.fn();
+
+    render(
+      <HomeScreen
+        uid={UID}
+        firestoreClientFactory={() => client}
+        onSelectDomain={onSelectDomain}
+      />,
+    );
+    await waitFor(() => screen.getByTestId('home-screen'));
+
+    fireEvent.click(screen.getByTestId('domain-row-health'));
+
+    expect(onSelectDomain).toHaveBeenCalledTimes(1);
+    expect(typeof onSelectDomain.mock.calls[0][0]).toBe('string');
+  });
+
+  it('renders domain rows as plain (non-interactive) when onSelectDomain is not provided', async () => {
+    const client = createFakeFirestoreClient();
+
+    render(<HomeScreen uid={UID} firestoreClientFactory={() => client} />);
+    await waitFor(() => screen.getByTestId('home-screen'));
+
+    expect(screen.getByTestId('domain-row-health').tagName).toBe('DIV');
   });
 });
