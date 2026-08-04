@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 
 import type { FirestoreClient } from '@/data/firestoreClient';
+import { DailyQuestsScreen } from '@/features/quests/DailyQuestsScreen';
 import { DomainDetailScreen } from '@/features/stats/DomainDetailScreen';
 import { HomeScreen } from '@/features/stats/HomeScreen';
 
@@ -26,6 +27,10 @@ export function AppRoutes({ uid, firestoreClientFactory }: AppRoutesProps) {
       <Route
         path="/domains/:domainId"
         element={<DomainDetailRoute uid={uid} firestoreClientFactory={firestoreClientFactory} />}
+      />
+      <Route
+        path="/quests"
+        element={<DailyQuestsScreen uid={uid} firestoreClientFactory={firestoreClientFactory} />}
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
