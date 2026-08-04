@@ -22,6 +22,8 @@ export interface RadarAxisLayout {
 }
 
 export interface RadarLayout {
+  /** Total width/height the chart needs, including label margin — use this for the SVG canvas, not `chartSize`. */
+  canvasSize: number;
   center: Point;
   radius: number;
   axes: RadarAxisLayout[];
@@ -50,21 +52,32 @@ function labelAnchorFor(point: Point, center: number): LabelAnchor {
  * Computes every point needed to draw an N-axis radar chart, purely from its
  * inputs. Values are clamped to `[0, maxValue]` before being placed on their axis.
  * Returns `null` below 3 axes, since a polygon needs at least a triangle.
+ *
+ * `chartSize` is the diameter of the plotted polygon itself. The returned
+ * `canvasSize` is larger — it reserves margin on every side for axis label
+ * text, which extends outward from its anchor point and would otherwise get
+ * clipped by the SVG viewBox at the widest axes (whichever sit closest to
+ * horizontal, since that's where label text extends furthest sideways).
  */
 export function buildRadarLayout(
   axes: RadarChartAxis[],
   maxValue: number,
-  size: number,
+  chartSize: number,
 ): RadarLayout | null {
   const count = axes.length;
   if (count < 3) {
     return null;
   }
 
-  const centerValue = size / 2;
+  // Label text is a fixed font size regardless of chart size, so the margin can't be
+  // purely proportional — a small chart needs just as much absolute room for "Relationships"
+  // as a large one. Floor it at a fixed pixel minimum alongside the proportional component.
+  const labelMargin = Math.max(chartSize * 0.3, 70);
+  const canvasSize = chartSize + labelMargin * 2;
+  const centerValue = canvasSize / 2;
   const center: Point = { x: centerValue, y: centerValue };
-  const radius = size * 0.32;
-  const labelRadius = radius + size * 0.14;
+  const radius = chartSize * 0.32;
+  const labelRadius = radius + chartSize * 0.14;
 
   const layout: RadarAxisLayout[] = axes.map((axis, index) => {
     const clamped = Math.min(maxValue, Math.max(0, axis.value));
@@ -82,7 +95,7 @@ export function buildRadarLayout(
     };
   });
 
-  return { center, radius, axes: layout };
+  return { canvasSize, center, radius, axes: layout };
 }
 
 export function pointsToString(points: Point[]): string {

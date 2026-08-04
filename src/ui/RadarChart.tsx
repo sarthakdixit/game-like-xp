@@ -26,13 +26,18 @@ export function RadarChart({
     return <View testID="radar-chart-empty" style={{ width: size, height: size }} />;
   }
 
-  const { center, axes: axisLayout } = layout;
+  const { canvasSize, center, axes: axisLayout } = layout;
   const outerPoints = pointsToString(axisLayout.map((a) => a.outer));
   const gridPoints = pointsToString(axisLayout.map((a) => a.grid));
   const dataPoints = pointsToString(axisLayout.map((a) => a.data));
 
   return (
-    <Svg testID="radar-chart" width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+    <Svg
+      testID="radar-chart"
+      width={canvasSize}
+      height={canvasSize}
+      viewBox={`0 0 ${canvasSize} ${canvasSize}`}
+    >
       <Polygon
         points={outerPoints}
         fill="none"

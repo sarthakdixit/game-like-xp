@@ -150,4 +150,44 @@ describe('buildRadarLayout', () => {
     expect(anchors).toContain('end');
     expect(anchors[0]).toBe('middle'); // top axis sits dead-center horizontally
   });
+
+  describe('label margin (regression: Career/Growth were clipped by the SVG edge)', () => {
+    // Conservative estimate of rendered text width at fontSize 11 — real glyphs are
+    // narrower, so if a label fits under this estimate it fits in practice too.
+    const PX_PER_CHAR = 7;
+
+    function textExtent(label: string): number {
+      return label.length * PX_PER_CHAR;
+    }
+
+    it('reserves a canvas bigger than the plotted chart', () => {
+      const layout = buildRadarLayout(FIVE_AXES, 100, 220)!;
+      expect(layout.canvasSize).toBeGreaterThan(220);
+    });
+
+    it('keeps every label fully inside the canvas at the widest axes (Career, Growth)', () => {
+      for (const chartSize of [160, 220, 300]) {
+        const layout = buildRadarLayout(FIVE_AXES, 100, chartSize)!;
+
+        for (const axis of layout.axes) {
+          const extent = textExtent(axis.label);
+          if (axis.labelAnchor === 'start') {
+            expect(axis.labelPoint.x + extent).toBeLessThanOrEqual(layout.canvasSize);
+          } else if (axis.labelAnchor === 'end') {
+            expect(axis.labelPoint.x - extent).toBeGreaterThanOrEqual(0);
+          }
+        }
+      }
+    });
+
+    it('keeps the longest label (Relationships) inside the canvas too', () => {
+      const layout = buildRadarLayout(FIVE_AXES, 100, 220)!;
+      const relationships = layout.axes.find((a) => a.key === 'relationships')!;
+
+      expect(relationships.labelAnchor).toBe('start');
+      expect(relationships.labelPoint.x + textExtent(relationships.label)).toBeLessThanOrEqual(
+        layout.canvasSize,
+      );
+    });
+  });
 });
