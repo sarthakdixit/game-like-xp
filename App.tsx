@@ -12,9 +12,11 @@ export default function App() {
       try {
         const db = await getDb();
         await bootstrapNotifications(db, getNotificationClient());
-      } catch {
+      } catch (error) {
         // Notification setup is best-effort — a failure here (e.g. no native
-        // module available) should never block the rest of the app.
+        // module available) should never block the rest of the app, but log
+        // it rather than swallowing it so it's actually diagnosable.
+        console.error('[Chronicle notifications] bootstrap failed:', error);
       }
     }
 

@@ -19,12 +19,17 @@ export async function bootstrapNotifications(
   notificationClient: NotificationClient,
 ): Promise<void> {
   const permission = await requestNotificationPermissions(notificationClient);
+  console.log('[Chronicle notifications] permission status:', permission);
   if (permission !== 'granted') {
+    console.log('[Chronicle notifications] skipping scheduling — permission not granted');
     return;
   }
 
   await ensureDailyReminderScheduled(notificationClient);
+  console.log('[Chronicle notifications] daily reminder ensured');
 
   const decayingDomainNames = await getDecayingDomainNames(db);
+  console.log('[Chronicle notifications] decaying domains:', decayingDomainNames);
   await scheduleDecayNudgeIfNeeded(notificationClient, decayingDomainNames);
+  console.log('[Chronicle notifications] decay nudge sync complete');
 }
