@@ -1,0 +1,390 @@
+<title>Chronicle — UI style guide</title>
+<style>
+  :root{
+    --ink:#2b1b12;
+    --ink-soft:#5a4632;
+    --parchment:#ddc48d;
+    --parchment-light:#ecdcac;
+    --parchment-dark:#c6a96f;
+    --parchment-crease:#b9986088;
+    --leather:#1b140f;
+    --leather-light:#2c2118;
+    --leather-seam:#0f0b08;
+    --gold:#a9782f;
+    --gold-bright:#dcb15a;
+    --seal:#7a1f1f;
+    --seal-bright:#a13a2c;
+    --dom-health:#7a1f1f;
+    --dom-career:#2a3b54;
+    --dom-relationships:#6b2942;
+    --dom-finance:#2f5d55;
+    --dom-growth:#3f5230;
+  }
+  .stage{
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at 50% -10%, #3a2c1e 0%, transparent 60%),
+      var(--leather);
+    padding:2.5rem 1.25rem 3.5rem;
+    font-family:Georgia,'Iowan Old Style','Palatino Linotype',serif;
+    color:var(--ink);
+  }
+  .display{
+    font-family:'Palatino Linotype','Book Antiqua',Palatino,Georgia,serif;
+    font-variant:small-caps;
+    letter-spacing:0.09em;
+  }
+  h1,h2,h3{text-wrap:balance;}
+
+  /* ---- masthead ---- */
+  .masthead{max-width:920px;margin:0 auto 2.75rem;text-align:center;}
+  .masthead .mark{
+    font-size:44px;font-weight:500;color:var(--gold-bright);
+    text-shadow:0 1px 0 #000, 0 2px 6px rgba(0,0,0,.45);
+    margin:0;
+  }
+  .masthead .sub{
+    color:#c9b892;font-size:14px;letter-spacing:0.08em;
+    font-variant:small-caps;margin:.4rem 0 0;
+  }
+  .masthead .divider{
+    width:120px;height:1px;margin:1.4rem auto;
+    background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  }
+
+  /* ---- palette / type strip ---- */
+  .guide-block{max-width:920px;margin:0 auto 2.75rem;}
+  .guide-label{
+    color:#c9b892;font-size:12px;letter-spacing:0.14em;
+    font-variant:small-caps;margin:0 0 .75rem;
+  }
+  .swatch-row{display:flex;flex-wrap:wrap;gap:10px;}
+  .swatch{
+    display:flex;align-items:center;gap:8px;
+    background:var(--leather-light);border:1px solid #00000055;
+    border-radius:6px;padding:6px 12px 6px 6px;
+  }
+  .swatch i{width:22px;height:22px;border-radius:4px;display:block;flex:none;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.35);}
+  .swatch span{font-size:12px;color:#e5d8ba;font-variant:small-caps;letter-spacing:.04em;}
+
+  .type-sample{background:var(--parchment);border-radius:8px;padding:1.25rem 1.5rem;
+    box-shadow:inset 0 0 0 1px var(--parchment-crease);}
+  .type-sample .a{font-size:26px;margin:0 0 4px;color:var(--ink);}
+  .type-sample .b{font-size:15px;margin:0;color:var(--ink-soft);line-height:1.6;max-width:52ch;}
+
+  /* ---- component key ---- */
+  .comp-row{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;}
+  .comp-card{background:var(--parchment);border-radius:8px;padding:14px 16px;
+    box-shadow:inset 0 0 0 1px var(--parchment-crease);flex:1 1 220px;}
+  .comp-card h4{margin:0 0 10px;font-size:12px;color:var(--ink-soft);
+    font-variant:small-caps;letter-spacing:.08em;font-weight:400;}
+
+  .ribbon{display:flex;align-items:center;gap:10px;}
+  .ribbon .badge{
+    width:38px;height:38px;border-radius:50%;background:var(--gold);
+    display:flex;align-items:center;justify-content:center;color:#2b1b0c;
+    font-weight:500;font-size:15px;box-shadow:inset 0 0 0 2px #00000030;flex:none;
+    font-variant:normal;
+  }
+  .ribbon .txt p{margin:0;}
+  .ribbon .lvl{font-size:13px;color:var(--ink-soft);font-variant:small-caps;letter-spacing:.04em;}
+  .ribbon .title{font-size:15px;color:var(--ink);}
+
+  button.btn{
+    font-family:inherit;font-size:13px;font-variant:small-caps;letter-spacing:.05em;
+    border:none;border-radius:5px;padding:9px 16px;cursor:pointer;
+  }
+  .btn-primary{background:var(--seal);color:#f2ddd2;box-shadow:inset 0 0 0 1px #00000040;}
+  .btn-primary:hover{background:var(--seal-bright);}
+  .btn-secondary{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink-soft);}
+  .btn-secondary:hover{background:#00000010;}
+
+  /* ---- quest card ---- */
+  .quest{
+    display:flex;align-items:center;gap:10px;background:var(--parchment-light);
+    border-radius:6px;padding:9px 10px;box-shadow:inset 0 0 0 1px var(--parchment-crease);
+    position:relative;overflow:hidden;
+  }
+  .quest::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--tag,var(--gold));}
+  .quest .chk{
+    width:22px;height:22px;border-radius:50%;flex:none;
+    border:1.5px solid var(--ink-soft);display:flex;align-items:center;justify-content:center;
+    cursor:pointer;background:transparent;
+  }
+  .quest .chk svg{width:12px;height:12px;opacity:0;transition:opacity .15s;}
+  .quest.done .chk{background:var(--tag,var(--gold));border-color:var(--tag,var(--gold));}
+  .quest.done .chk svg{opacity:1;}
+  .quest .chk svg path{stroke:#fff5e6;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+  .quest .body{flex:1;min-width:0;}
+  .quest .body p{margin:0;font-size:13.5px;color:var(--ink);}
+  .quest.done .body p{color:var(--ink-soft);text-decoration:line-through;text-decoration-color:#00000040;}
+  .quest .xp{font-size:11px;color:var(--ink-soft);font-variant:small-caps;letter-spacing:.03em;flex:none;}
+  .quest .icon{flex:none;width:18px;height:18px;color:var(--tag,var(--gold));}
+  .quest .icon svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+  .boss-flag{position:absolute;top:0;right:0;background:var(--gold);color:#2b1b0c;
+    font-size:9px;font-variant:small-caps;letter-spacing:.06em;padding:2px 8px 2px 10px;
+    border-bottom-left-radius:8px;}
+
+  /* ---- phones ---- */
+  .phones{max-width:1020px;margin:0 auto;display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(272px,1fr));gap:2rem;}
+  .phone-wrap{display:flex;flex-direction:column;align-items:center;gap:.9rem;}
+  .phone-cap{color:#c9b892;font-size:12px;letter-spacing:.1em;font-variant:small-caps;}
+  .phone{
+    width:272px;border-radius:30px;padding:14px 10px;
+    background:linear-gradient(160deg,var(--leather-light),var(--leather) 60%);
+    box-shadow:0 0 0 1px var(--leather-seam), 0 18px 40px -18px #000000cc;
+  }
+  .screen{
+    background:var(--parchment);border-radius:18px;padding:16px 14px 20px;
+    box-shadow:inset 0 0 0 1px var(--parchment-crease), inset 0 0 18px #00000022;
+    min-height:480px;
+  }
+  .screen-head{text-align:center;margin-bottom:.9rem;}
+  .screen-head .day{font-size:11px;color:var(--ink-soft);font-variant:small-caps;letter-spacing:.08em;}
+  .screen-head h2{font-size:19px;margin:.15rem 0 0;color:var(--ink);font-weight:500;}
+  .back{font-size:11px;color:var(--ink-soft);font-variant:small-caps;letter-spacing:.06em;margin:0 0 .6rem;cursor:pointer;}
+
+  .domain-list{display:flex;flex-direction:column;gap:8px;margin-top:.9rem;}
+  .domain-row{display:flex;align-items:center;gap:9px;}
+  .domain-row .icon{width:17px;height:17px;flex:none;color:var(--tag);}
+  .domain-row .icon svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+  .domain-row .name{font-size:13px;flex:1;color:var(--ink);}
+  .domain-row .lv{font-size:11px;color:var(--ink-soft);font-variant:small-caps;}
+  .bar{width:56px;height:5px;border-radius:3px;background:#00000020;overflow:hidden;flex:none;}
+  .bar i{display:block;height:100%;background:var(--tag);}
+
+  .stat-list{display:flex;flex-direction:column;gap:9px;margin-top:1rem;}
+  .stat-line{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;}
+  .stat-line .n{color:var(--ink);}
+  .stat-line .v{font-variant-numeric:tabular-nums;color:var(--ink-soft);}
+  .stat-line.decay .v{color:var(--seal);}
+  .stat-line .note{font-size:10.5px;color:var(--seal);margin-left:6px;font-variant:small-caps;}
+
+  .xpbar-wrap{margin-top:.7rem;}
+  .xpbar-wrap .row{display:flex;justify-content:space-between;font-size:10.5px;color:var(--ink-soft);
+    font-variant:small-caps;letter-spacing:.03em;margin-bottom:3px;}
+  .xpbar{height:7px;border-radius:4px;background:#00000020;overflow:hidden;}
+  .xpbar i{display:block;height:100%;background:var(--gold);width:64%;}
+
+  .quest-list{display:flex;flex-direction:column;gap:8px;margin-top:.9rem;}
+  .quest-progress{font-size:12px;color:var(--ink-soft);text-align:center;margin:-.3rem 0 .8rem;font-variant:small-caps;letter-spacing:.03em;}
+
+  @media (prefers-reduced-motion:no-preference){
+    .xpbar i{transition:width .8s ease;}
+  }
+</style>
+
+<div class="stage">
+  <div class="masthead">
+    <p class="display mark">Chronicle</p>
+    <p class="sub">A life, kept like a saga</p>
+    <div class="divider"></div>
+  </div>
+
+  <div class="guide-block">
+    <p class="guide-label">Domain palette</p>
+    <div class="swatch-row">
+      <div class="swatch"><i style="background:var(--dom-health)"></i><span>Health</span></div>
+      <div class="swatch"><i style="background:var(--dom-career)"></i><span>Career</span></div>
+      <div class="swatch"><i style="background:var(--dom-relationships)"></i><span>Relationships</span></div>
+      <div class="swatch"><i style="background:var(--dom-finance)"></i><span>Finance</span></div>
+      <div class="swatch"><i style="background:var(--dom-growth)"></i><span>Growth</span></div>
+      <div class="swatch"><i style="background:var(--gold)"></i><span>Gold / XP</span></div>
+      <div class="swatch"><i style="background:var(--seal)"></i><span>Seal / primary</span></div>
+    </div>
+  </div>
+
+  <div class="guide-block">
+    <p class="guide-label">Type</p>
+    <div class="type-sample">
+      <p class="a display">Adept of growth — level 4</p>
+      <p class="b">Body copy sits in a plain serif for legibility across long quest descriptions and stat notes, while headings switch to small caps with wide tracking for an engraved, ledger-plate feel.</p>
+    </div>
+  </div>
+
+  <div class="guide-block">
+    <p class="guide-label">Components</p>
+    <div class="comp-row">
+      <div class="comp-card">
+        <h4>Level ribbon</h4>
+        <div class="ribbon">
+          <div class="badge">4</div>
+          <div class="txt">
+            <p class="title display">Adept</p>
+            <p class="lvl">Health · level 4</p>
+          </div>
+        </div>
+      </div>
+      <div class="comp-card">
+        <h4>Buttons</h4>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-primary">Accept quest</button>
+          <button class="btn btn-secondary">Skip today</button>
+        </div>
+      </div>
+      <div class="comp-card">
+        <h4>Quest card</h4>
+        <div class="quest done" style="--tag:var(--dom-growth)">
+          <div class="chk"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+          <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 22V12"/><path d="M12 12C12 12 4 12 4 4C4 4 12 4 12 12Z"/><path d="M12 12C12 12 20 12 20 4C20 4 12 4 12 12Z"/></svg></div>
+          <div class="body"><p>Read for 15 minutes</p></div>
+          <div class="xp">+15xp</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phones">
+    <div class="phone-wrap">
+      <p class="phone-cap">Home · character sheet</p>
+      <div class="phone">
+        <div class="screen">
+          <div class="screen-head">
+            <p class="day">Day 47 of the chronicle</p>
+            <h2 class="display">Your standing</h2>
+          </div>
+
+          <svg viewBox="-10 -10 220 210" style="width:100%;">
+            <polygon points="100,20 176.09,75.28 147.02,164.72 52.98,164.72 23.91,75.28" fill="none" stroke="#00000030" stroke-width="1"/>
+            <polygon points="100,60 138.04,87.64 123.51,132.36 76.49,132.36 61.96,87.64" fill="none" stroke="#00000022" stroke-width="1"/>
+            <line x1="100" y1="100" x2="100" y2="20" stroke="#00000025" stroke-width="1"/>
+            <line x1="100" y1="100" x2="176.09" y2="75.28" stroke="#00000025" stroke-width="1"/>
+            <line x1="100" y1="100" x2="147.02" y2="164.72" stroke="#00000025" stroke-width="1"/>
+            <line x1="100" y1="100" x2="52.98" y2="164.72" stroke="#00000025" stroke-width="1"/>
+            <line x1="100" y1="100" x2="23.91" y2="75.28" stroke="#00000025" stroke-width="1"/>
+            <polygon points="100,42.4 141.85,86.40 118.81,125.89 85.89,119.42 54.35,85.17" fill="#a9782f" fill-opacity="0.35" stroke="#a9782f" stroke-width="1.5"/>
+            <text x="100" y="10" text-anchor="middle" font-size="10" font-variant="small-caps" letter-spacing="0.5" fill="#5a4632">Health</text>
+            <text x="184" y="72" text-anchor="start" font-size="10" font-variant="small-caps" fill="#5a4632">Career</text>
+            <text x="150" y="182" text-anchor="start" font-size="10" font-variant="small-caps" fill="#5a4632">Relationships</text>
+            <text x="50" y="182" text-anchor="end" font-size="10" font-variant="small-caps" fill="#5a4632">Finance</text>
+            <text x="16" y="72" text-anchor="end" font-size="10" font-variant="small-caps" fill="#5a4632">Growth</text>
+          </svg>
+
+          <div class="domain-list">
+            <div class="domain-row" style="--tag:var(--dom-health)">
+              <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9C.8 8.6 2 5 5.3 5c1.9 0 3.3 1 4.7 2.8C11.4 6 12.8 5 14.7 5 18 5 19.2 8.6 17.6 12 15.5 16.4 12 21 12 21z"/></svg></div>
+              <span class="name">Health</span><span class="lv">Lv 4 · Adept</span>
+              <div class="bar"><i style="width:72%"></i></div>
+            </div>
+            <div class="domain-row" style="--tag:var(--dom-career)">
+              <div class="icon"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="12" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="3" y1="12" x2="21" y2="12"/></svg></div>
+              <span class="name">Career</span><span class="lv">Lv 3</span>
+              <div class="bar"><i style="width:55%;background:var(--dom-career)"></i></div>
+            </div>
+            <div class="domain-row" style="--tag:var(--dom-relationships)">
+              <div class="icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="10" r="4.2"/><circle cx="16" cy="11" r="3.4"/></svg></div>
+              <span class="name">Relationships</span><span class="lv">Lv 2</span>
+              <div class="bar"><i style="width:40%;background:var(--dom-relationships)"></i></div>
+            </div>
+            <div class="domain-row" style="--tag:var(--dom-finance)">
+              <div class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.3 9.6c0-1.1 1.1-2 2.7-2s2.7.9 2.7 1.9-1.2 1.5-2.7 1.9-2.7 1-2.7 2 1.2 1.9 2.7 1.9 2.7-.9 2.7-2"/></svg></div>
+              <span class="name">Finance</span><span class="lv">Lv 2</span>
+              <div class="bar"><i style="width:30%;background:var(--dom-finance)"></i></div>
+            </div>
+            <div class="domain-row" style="--tag:var(--dom-growth)">
+              <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 22V12"/><path d="M12 12C12 12 4 12 4 4C4 4 12 4 12 12Z"/><path d="M12 12C12 12 20 12 20 4C20 4 12 4 12 12Z"/></svg></div>
+              <span class="name">Growth</span><span class="lv">Lv 3</span>
+              <div class="bar"><i style="width:60%;background:var(--dom-growth)"></i></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone-wrap">
+      <p class="phone-cap">Domain detail · health</p>
+      <div class="phone">
+        <div class="screen">
+          <p class="back">&larr; Back to sheet</p>
+          <div class="screen-head" style="margin-bottom:.6rem;">
+            <p class="day" style="color:var(--dom-health)">Health · level 4</p>
+            <h2 class="display">Adept</h2>
+          </div>
+
+          <div class="xpbar-wrap">
+            <div class="row"><span>420xp</span><span>next: 650xp</span></div>
+            <div class="xpbar"><i style="width:64%"></i></div>
+          </div>
+
+          <svg viewBox="-20 -15 220 215" style="width:78%;display:block;margin:.75rem auto 0;">
+            <polygon points="90,20 160,90 90,160 20,90" fill="none" stroke="#00000030" stroke-width="1"/>
+            <polygon points="90,55 125,90 90,125 55,90" fill="none" stroke="#00000022" stroke-width="1"/>
+            <line x1="90" y1="90" x2="90" y2="20" stroke="#00000025"/>
+            <line x1="90" y1="90" x2="160" y2="90" stroke="#00000025"/>
+            <line x1="90" y1="90" x2="90" y2="160" stroke="#00000025"/>
+            <line x1="90" y1="90" x2="20" y2="90" stroke="#00000025"/>
+            <polygon points="90,44.5 121.5,90 90,128.5 55,90" fill="#7a1f1f" fill-opacity="0.35" stroke="#7a1f1f" stroke-width="1.5"/>
+            <text x="90" y="10" text-anchor="middle" font-size="10" font-variant="small-caps" fill="#5a4632">Fitness</text>
+            <text x="170" y="93" text-anchor="start" font-size="10" font-variant="small-caps" fill="#5a4632">Nutrition</text>
+            <text x="90" y="176" text-anchor="middle" font-size="10" font-variant="small-caps" fill="#5a4632">Sleep</text>
+            <text x="10" y="93" text-anchor="end" font-size="10" font-variant="small-caps" fill="#5a4632">Mental</text>
+          </svg>
+
+          <div class="stat-list">
+            <div class="stat-line"><span class="n">Fitness</span><span class="v">65</span></div>
+            <div class="stat-line"><span class="n">Nutrition</span><span class="v">45</span></div>
+            <div class="stat-line decay"><span class="n">Sleep</span><span class="v">55 <span class="note">decaying</span></span></div>
+            <div class="stat-line"><span class="n">Mental wellbeing</span><span class="v">50</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone-wrap">
+      <p class="phone-cap">Daily quests</p>
+      <div class="phone">
+        <div class="screen">
+          <div class="screen-head">
+            <p class="day">Today</p>
+            <h2 class="display">Five quests</h2>
+          </div>
+          <p class="quest-progress">3 of 5 complete</p>
+
+          <div class="quest-list">
+            <div class="quest done" style="--tag:var(--dom-health)">
+              <div class="chk"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+              <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9C.8 8.6 2 5 5.3 5c1.9 0 3.3 1 4.7 2.8C11.4 6 12.8 5 14.7 5 18 5 19.2 8.6 17.6 12 15.5 16.4 12 21 12 21z"/></svg></div>
+              <div class="body"><p>Move for 20 minutes</p></div>
+              <div class="xp">+15xp</div>
+            </div>
+            <div class="quest done" style="--tag:var(--dom-growth)">
+              <div class="chk"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+              <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 22V12"/><path d="M12 12C12 12 4 12 4 4C4 4 12 4 12 12Z"/><path d="M12 12C12 12 20 12 20 4C20 4 12 4 12 12Z"/></svg></div>
+              <div class="body"><p>Read for 15 minutes</p></div>
+              <div class="xp">+15xp</div>
+            </div>
+            <div class="quest done" style="--tag:var(--dom-finance)">
+              <div class="chk"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+              <div class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.3 9.6c0-1.1 1.1-2 2.7-2s2.7.9 2.7 1.9-1.2 1.5-2.7 1.9-2.7 1-2.7 2 1.2 1.9 2.7 1.9 2.7-.9 2.7-2"/></svg></div>
+              <div class="body"><p>Log today's spending</p></div>
+              <div class="xp">+10xp</div>
+            </div>
+            <div class="quest" style="--tag:var(--dom-career)">
+              <div class="chk"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+              <div class="icon"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="12" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="3" y1="12" x2="21" y2="12"/></svg></div>
+              <div class="body"><p>Finish one deep-work block</p></div>
+              <div class="xp">+20xp</div>
+            </div>
+            <div class="quest" style="--tag:var(--dom-relationships)">
+              <div class="boss-flag display">Boss</div>
+              <div class="chk"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+              <div class="icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="10" r="4.2"/><circle cx="16" cy="11" r="3.4"/></svg></div>
+              <div class="body"><p>Message someone you haven't talked to in a while</p></div>
+              <div class="xp">+40xp</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.quest .chk').forEach(function(chk){
+    chk.addEventListener('click', function(){
+      chk.closest('.quest').classList.toggle('done');
+    });
+  });
+</script>
