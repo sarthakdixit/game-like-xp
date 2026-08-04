@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import type { FirestoreClient } from './firestoreClient';
-import { listAllQuests, listQuestsByDomain } from './repositories/questsRepository';
+import { createQuest, listAllQuests, listQuestsByDomain } from './repositories/questsRepository';
 import { ensureQuestsSeeded, seedQuests } from './seedQuests';
 import { createFakeFirestoreClient } from './testUtils/fakeFirestoreClient';
 
@@ -121,5 +121,41 @@ describe('ensureQuestsSeeded', () => {
     await ensureQuestsSeeded(client, UID);
 
     expect(await listAllQuests(client, 'other-user')).toEqual([]);
+  });
+
+  it('adds newly-added template quests for a returning user with only an older subset', async () => {
+    // Regression test: a real user had already been seeded before health_workout (and the rest
+    // of this batch's new quests) existed in QUEST_SEEDS. The old "skip entirely if the user has
+    // any quests at all" guard meant they'd never receive new template additions — reconciling
+    // by missing key, not by "seeded at all", is what actually fixes that.
+    await createQuest(client, UID, {
+      id: 'health_walk',
+      domainId: 'health',
+      text: 'Take a 15-minute walk',
+      xpReward: 15,
+    });
+
+    await ensureQuestsSeeded(client, UID);
+
+    const quests = await listAllQuests(client, UID);
+    const ids = new Set(quests.map((q) => q.id));
+    expect(ids.has('health_workout')).toBe(true);
+    expect(ids.has('career_office')).toBe(true);
+    expect(ids.has('growth_course')).toBe(true);
+  });
+
+  it('does not touch an existing quest doc when reconciling missing ones', async () => {
+    const original = await createQuest(client, UID, {
+      id: 'health_walk',
+      domainId: 'health',
+      text: 'Custom edited text', // simulates a doc that's diverged from the current seed text
+      xpReward: 15,
+    });
+
+    await ensureQuestsSeeded(client, UID);
+
+    const quests = await listAllQuests(client, UID);
+    const stillThere = quests.find((q) => q.id === 'health_walk');
+    expect(stillThere).toEqual(original);
   });
 });

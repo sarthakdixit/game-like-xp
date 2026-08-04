@@ -270,27 +270,41 @@ const QUEST_SEEDS: QuestSeed[] = [
   },
 ];
 
+async function createQuestFromSeed(
+  client: FirestoreClient,
+  uid: string,
+  seed: QuestSeed,
+): Promise<void> {
+  await createQuest(client, uid, {
+    id: seed.key,
+    domainId: seed.domainKey,
+    text: seed.text,
+    xpReward: seed.xpReward,
+    isBoss: seed.isBoss,
+    priority: seed.priority,
+  });
+}
+
 /** Seeds the starter quest template bank for a signed-in user. */
 export async function seedQuests(client: FirestoreClient, uid: string): Promise<void> {
   for (const seed of QUEST_SEEDS) {
-    await createQuest(client, uid, {
-      id: seed.key,
-      domainId: seed.domainKey,
-      text: seed.text,
-      xpReward: seed.xpReward,
-      isBoss: seed.isBoss,
-      priority: seed.priority,
-    });
+    await createQuestFromSeed(client, uid, seed);
   }
 }
 
 /**
- * Seeds the quest template bank only if the user has none yet — safe to
- * call on every app open without duplicating data for a returning user.
+ * Seeds any template quests the user doesn't have yet — safe to call on
+ * every app open. Covers both a brand-new user (nothing exists, everything
+ * gets created) and a returning user after the template bank has grown
+ * (only the newly-added keys get created; their existing quests are left
+ * untouched, not overwritten or duplicated).
  */
 export async function ensureQuestsSeeded(client: FirestoreClient, uid: string): Promise<void> {
   const existing = await listAllQuests(client, uid);
-  if (existing.length === 0) {
-    await seedQuests(client, uid);
+  const existingIds = new Set(existing.map((quest) => quest.id));
+  const missing = QUEST_SEEDS.filter((seed) => !existingIds.has(seed.key));
+
+  for (const seed of missing) {
+    await createQuestFromSeed(client, uid, seed);
   }
 }
