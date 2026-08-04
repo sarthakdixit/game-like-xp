@@ -50,6 +50,18 @@ export async function getChildStatById(db: SqliteClient, id: string): Promise<Ch
   return row ? childStatFromRow(row) : null;
 }
 
+export async function getChildStatByDomainAndKey(
+  db: SqliteClient,
+  domainId: string,
+  key: string,
+): Promise<ChildStat | null> {
+  const row = await db.getFirstAsync<ChildStatRow>(
+    'SELECT * FROM child_stats WHERE domain_id = ? AND key = ?',
+    [domainId, key],
+  );
+  return row ? childStatFromRow(row) : null;
+}
+
 export async function listChildStatsByDomain(
   db: SqliteClient,
   domainId: string,

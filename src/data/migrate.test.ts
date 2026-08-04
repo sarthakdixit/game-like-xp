@@ -20,8 +20,15 @@ describe('migrate', () => {
 
     await migrate(db);
 
-    expect(await getUserVersion(db)).toBe(1);
-    for (const table of ['domains', 'child_stats', 'quests', 'daily_quests', 'xp_events']) {
+    expect(await getUserVersion(db)).toBe(2);
+    for (const table of [
+      'domains',
+      'child_stats',
+      'quests',
+      'daily_quests',
+      'xp_events',
+      'health_imports',
+    ]) {
       expect(await tableExists(db, table)).toBe(true);
     }
   });
@@ -31,7 +38,7 @@ describe('migrate', () => {
 
     await migrate(db);
     await expect(migrate(db)).resolves.not.toThrow();
-    expect(await getUserVersion(db)).toBe(1);
+    expect(await getUserVersion(db)).toBe(2);
   });
 
   it('rolls back to version 0 and drops every table', async () => {
@@ -41,7 +48,14 @@ describe('migrate', () => {
     await rollback(db, 0);
 
     expect(await getUserVersion(db)).toBe(0);
-    for (const table of ['domains', 'child_stats', 'quests', 'daily_quests', 'xp_events']) {
+    for (const table of [
+      'domains',
+      'child_stats',
+      'quests',
+      'daily_quests',
+      'xp_events',
+      'health_imports',
+    ]) {
       expect(await tableExists(db, table)).toBe(false);
     }
   });

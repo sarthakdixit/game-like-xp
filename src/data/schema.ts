@@ -94,6 +94,22 @@ export interface XpEvent {
   createdAt: string;
 }
 
+export interface HealthImportRow {
+  id: string;
+  child_stat_id: string;
+  date: string;
+  applied_delta: number;
+  created_at: string;
+}
+
+export interface HealthImport {
+  id: string;
+  childStatId: string;
+  date: string;
+  appliedDelta: number;
+  createdAt: string;
+}
+
 export function domainFromRow(row: DomainRow): Domain {
   return {
     id: row.id,
@@ -148,6 +164,16 @@ export function xpEventFromRow(row: XpEventRow): XpEvent {
     amount: row.amount,
     source: row.source,
     sourceId: row.source_id,
+    createdAt: row.created_at,
+  };
+}
+
+export function healthImportFromRow(row: HealthImportRow): HealthImport {
+  return {
+    id: row.id,
+    childStatId: row.child_stat_id,
+    date: row.date,
+    appliedDelta: row.applied_delta,
     createdAt: row.created_at,
   };
 }

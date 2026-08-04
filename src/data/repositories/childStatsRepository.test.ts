@@ -3,6 +3,7 @@ import {
   createChildStat,
   deleteChildStat,
   getChildStatById,
+  getChildStatByDomainAndKey,
   listChildStatsByDomain,
   updateChildStatValue,
 } from './childStatsRepository';
@@ -98,6 +99,22 @@ describe('childStatsRepository', () => {
 
     const updated = await getChildStatById(db, created.id);
     expect(updated).toMatchObject({ value: 80, lastActiveAt: '2026-02-01T00:00:00.000Z' });
+  });
+
+  it('reads a child stat back by domain id and key', async () => {
+    const created = await createChildStat(db, {
+      domainId,
+      key: 'fitness',
+      name: 'Fitness',
+      sortOrder: 0,
+      lastActiveAt: '2026-01-01T00:00:00.000Z',
+    });
+
+    expect(await getChildStatByDomainAndKey(db, domainId, 'fitness')).toEqual(created);
+  });
+
+  it('returns null for a domain/key combination that does not exist', async () => {
+    expect(await getChildStatByDomainAndKey(db, domainId, 'missing')).toBeNull();
   });
 
   it('deletes a child stat', async () => {

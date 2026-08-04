@@ -1,8 +1,12 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { Platform } from 'react-native';
 
 import { getDb } from '@/data/db';
+import { getHealthClient } from '@/data/healthConnectClient';
 import { getNotificationClient } from '@/data/notifications';
+import { getLocalDateString } from '@/domain/today';
+import { importHealthDataForDate } from '@/features/health/healthImportService';
 import { bootstrapNotifications } from '@/features/notifications/bootstrapNotifications';
 import { RootNavigator } from '@/navigation/RootNavigator';
 
@@ -20,7 +24,21 @@ export default function App() {
       }
     }
 
+    async function setupHealthImport() {
+      // Health Connect is Android-only; there's no iOS HealthKit client yet.
+      if (Platform.OS !== 'android') {
+        return;
+      }
+      try {
+        const db = await getDb();
+        await importHealthDataForDate(db, getHealthClient(), getLocalDateString());
+      } catch (error) {
+        console.error('[Chronicle health import] bootstrap failed:', error);
+      }
+    }
+
     void setupNotifications();
+    void setupHealthImport();
   }, []);
 
   return (
