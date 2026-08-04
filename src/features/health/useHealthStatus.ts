@@ -47,6 +47,7 @@ export function useHealthStatus(
       setStatus(result);
       setError(null);
     } catch (caught) {
+      console.error('[Chronicle health sync] failed to load status:', caught);
       setError(caught instanceof Error ? caught : new Error(String(caught)));
     } finally {
       setLoading(false);
@@ -65,6 +66,7 @@ export function useHealthStatus(
       await importHealthDataForDate(db, client, getLocalDateString());
       await load();
     } catch (caught) {
+      console.error('[Chronicle health sync] syncNow failed:', caught);
       setError(caught instanceof Error ? caught : new Error(String(caught)));
     } finally {
       setSyncing(false);

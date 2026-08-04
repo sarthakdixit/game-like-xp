@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -63,8 +64,25 @@ export function RootNavigator() {
             tabBarStyle: { backgroundColor: colors.parchmentLight },
           }}
         >
-          <Tab.Screen name="HomeTab" component={HomeStackNavigator} options={{ title: 'Home' }} />
-          <Tab.Screen name="Health" component={HealthScreen} />
+          <Tab.Screen
+            name="HomeTab"
+            component={HomeStackNavigator}
+            options={{
+              title: 'Home',
+              tabBarIcon: ({ color, size, focused }) => (
+                <Ionicons name={focused ? 'home' : 'home-outline'} color={color} size={size} />
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Health"
+            component={HealthScreen}
+            options={{
+              tabBarIcon: ({ color, size, focused }) => (
+                <Ionicons name={focused ? 'heart' : 'heart-outline'} color={color} size={size} />
+              ),
+            }}
+          />
         </Tab.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

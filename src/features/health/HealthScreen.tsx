@@ -46,7 +46,7 @@ export function HealthScreen({ dbFactory, healthClientFactory }: HealthScreenPro
           <ActivityIndicator testID="health-screen-loading" color={colors.gold} />
         ) : error || !status ? (
           <Text testID="health-screen-error" style={styles.errorText}>
-            Couldn&apos;t load health sync status.
+            Couldn&apos;t load health sync status.{error ? ` (${error.message})` : ''}
           </Text>
         ) : (
           <HealthStatusCard status={status} color={color} syncing={syncing} onSyncNow={syncNow} />
