@@ -41,6 +41,9 @@ export function SignedInShell({ user, onSignOut, firestoreClientFactory }: Signe
         <NavLink to="/quests" className={({ isActive }) => (isActive ? 'active' : undefined)}>
           Daily quests
         </NavLink>
+        <NavLink to="/activity" className={({ isActive }) => (isActive ? 'active' : undefined)}>
+          Log activity
+        </NavLink>
       </nav>
 
       <AppRoutes uid={user.uid} firestoreClientFactory={firestoreClientFactory} />

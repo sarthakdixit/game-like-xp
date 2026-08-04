@@ -47,3 +47,18 @@ export interface XpEvent {
   /** Tiebreak-safe ordering key — see `nextSequence()`. Not meant for display. */
   seq: number;
 }
+
+export interface ActivityEntry {
+  /** = `date` — one entry per user per day, so resubmitting overwrites rather than duplicating. */
+  id: string;
+  date: string;
+  steps: number;
+  sleepHours: number;
+  exerciseMinutes: number;
+  /** The Fitness/Sleep child-stat deltas this entry mapped to, at the time it was last saved —
+   * kept so a later resubmit for the same day can apply only the *change* in delta, not the
+   * full new delta again. */
+  fitnessDelta: number;
+  sleepDelta: number;
+  loggedAt: string;
+}

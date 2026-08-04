@@ -1,0 +1,22 @@
+.activityEntryScreen {
+  width: 100%;
+}
+
+.activityEntryScreen .screenHead {
+  text-align: center;
+  margin-bottom: 0.6rem;
+}
+
+.activityEntryScreen .screenHead .day {
+  font-size: 11px;
+  font-variant: small-caps;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+
+.activityEntryScreen .screenHead h2 {
+  font-size: 22px;
+  margin: 0.15rem 0 0;
+  color: var(--ink);
+  font-weight: 500;
+}

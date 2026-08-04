@@ -117,4 +117,23 @@ describe('SignedInShell', () => {
     await waitFor(() => screen.getByTestId('home-screen'));
     expect(screen.queryByTestId('daily-quests-screen')).not.toBeInTheDocument();
   });
+
+  it('navigates to the Log Activity screen via the primary nav, and back to home', async () => {
+    renderSignedInShell({
+      user: { uid: 'abc', displayName: 'Ada Lovelace', email: 'ada@example.com', photoURL: null },
+      onSignOut: vi.fn(),
+      firestoreClientFactory: fakeFirestoreClientFactory(),
+    });
+    await waitFor(() => screen.getByTestId('home-screen'));
+
+    screen.getByRole('link', { name: 'Log activity' }).click();
+
+    await waitFor(() => screen.getByTestId('activity-entry-screen'));
+    expect(screen.queryByTestId('home-screen')).not.toBeInTheDocument();
+
+    screen.getByRole('link', { name: 'Character sheet' }).click();
+
+    await waitFor(() => screen.getByTestId('home-screen'));
+    expect(screen.queryByTestId('activity-entry-screen')).not.toBeInTheDocument();
+  });
 });

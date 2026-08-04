@@ -29,6 +29,10 @@ service cloud.firestore {
       match /xpEvents/{xpEventId} {
         allow read, write: if isOwner(uid);
       }
+
+      match /activityEntries/{activityEntryId} {
+        allow read, write: if isOwner(uid);
+      }
     }
 
     // Deny everything else by default (no shared/public collections exist).

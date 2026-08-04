@@ -45,3 +45,7 @@ export function xpEventsPath(uid: string): string {
 export function xpEventPath(uid: string, xpEventId: string): string {
   return `${xpEventsPath(uid)}/${xpEventId}`;
 }
+
+export function activityEntryPath(uid: string, activityEntryId: string): string {
+  return `users/${uid}/activityEntries/${activityEntryId}`;
+}
