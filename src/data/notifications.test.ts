@@ -21,18 +21,16 @@ describe('getNotificationClient', () => {
   });
 
   function loadClient() {
-     
-    const { getNotificationClient } =
-      require('./notifications') as typeof import('./notifications');
-    return getNotificationClient();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- reset module state per test
+    const notifications = require('./notifications') as typeof import('./notifications');
+    return notifications.getNotificationClient();
   }
 
   it('memoizes the client across calls', () => {
     const client = loadClient();
-     
-    const { getNotificationClient } =
-      require('./notifications') as typeof import('./notifications');
-    expect(getNotificationClient()).toBe(client);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- reset module state per test
+    const notifications = require('./notifications') as typeof import('./notifications');
+    expect(notifications.getNotificationClient()).toBe(client);
   });
 
   it('maps getPermissionStatus and requestPermission through to expo-notifications', async () => {
