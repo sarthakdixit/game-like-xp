@@ -3,23 +3,15 @@
 # dependencies
 node_modules/
 
-# Expo
-.expo/
+# build output
 dist/
-web-build/
-expo-env.d.ts
+dist-ssr/
 
-# Native
-.kotlin/
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
-
-# Metro
-.metro-health-check*
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
 
 # debug
 npm-debug.*
@@ -31,6 +23,8 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
+.env.local
 .env*.local
 
 # typescript
@@ -39,6 +33,6 @@ yarn-error.*
 # test coverage
 coverage/
 
-# generated native folders
-/ios
-/android
+# editor
+.vscode/*
+!.vscode/extensions.json
