@@ -2,9 +2,8 @@
 export const DAILY_REMINDER_ID = 'daily-quest-reminder';
 export const DECAY_NUDGE_ID = 'decay-nudge';
 
-/** Local time the daily quest reminder fires at. */
-export const DAILY_REMINDER_HOUR = 9;
-export const DAILY_REMINDER_MINUTE = 0;
+/** How often the quest reminder repeats while quests are still outstanding. */
+export const REMINDER_INTERVAL_HOURS = 2;
 
 export interface QuietHours {
   /** Hour (0-23) quiet hours begin, inclusive. */
@@ -49,9 +48,36 @@ export function resolveNotificationTime(
   return result;
 }
 
-/** True if no notification with `DAILY_REMINDER_ID` is already scheduled. */
-export function shouldScheduleDailyReminder(existingIds: string[]): boolean {
-  return !existingIds.includes(DAILY_REMINDER_ID);
+/** Stable, per-slot notification id — one per reminder hour, so each can be cancelled individually. */
+export function reminderIdForHour(hour: number): string {
+  return `${DAILY_REMINDER_ID}-${hour}`;
+}
+
+/**
+ * Every hour (0-23) a reminder could fire at, spaced `intervalHours` apart
+ * starting from midnight, skipping any hour that falls in quiet hours. E.g.
+ * with the defaults (2-hour interval, 21:00-8:00 quiet): [8, 10, 12, 14, 16, 18, 20].
+ */
+export function reminderSlotHours(
+  intervalHours: number = REMINDER_INTERVAL_HOURS,
+  quietHours: QuietHours = DEFAULT_QUIET_HOURS,
+): number[] {
+  const hours: number[] = [];
+  for (let hour = 0; hour < 24; hour += intervalHours) {
+    if (!isQuietHour(hour, quietHours)) {
+      hours.push(hour);
+    }
+  }
+  return hours;
+}
+
+/** Slot hours still ahead today, at or after `nowHour`. */
+export function remainingReminderHoursToday(
+  nowHour: number,
+  intervalHours: number = REMINDER_INTERVAL_HOURS,
+  quietHours: QuietHours = DEFAULT_QUIET_HOURS,
+): number[] {
+  return reminderSlotHours(intervalHours, quietHours).filter((hour) => hour >= nowHour);
 }
 
 /** Grammatically joins decaying domain names into a notification body. Empty string if none. */

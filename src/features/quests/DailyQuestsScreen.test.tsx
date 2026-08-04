@@ -3,10 +3,16 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import { getDomainByKey } from '@/data/repositories/domainsRepository';
 import { seedDomains } from '@/data/seed';
 import { seedQuests } from '@/data/seedQuests';
+import { createFakeNotificationClient } from '@/data/testUtils/fakeNotificationClient';
 import { createMigratedTestDb } from '@/data/testUtils/nodeSqliteClient';
 import type { SqliteClient } from '@/data/sqliteClient';
 
 import { DailyQuestsScreen } from './DailyQuestsScreen';
+
+function fakeNotificationClientFactory() {
+  const client = createFakeNotificationClient('granted');
+  return () => client;
+}
 
 /** Cycles through `values` repeatedly — generateDailyQuests calls random() twice per domain. */
 function fixedRandom(...values: number[]): () => number {
@@ -29,7 +35,13 @@ describe('DailyQuestsScreen', () => {
   it('renders 5 quest cards and a 0-of-5 progress summary', async () => {
     const db = await setupSeededDb();
 
-    await render(<DailyQuestsScreen dbFactory={() => Promise.resolve(db)} date="2026-08-04" />);
+    await render(
+      <DailyQuestsScreen
+        dbFactory={() => Promise.resolve(db)}
+        date="2026-08-04"
+        notificationClientFactory={fakeNotificationClientFactory()}
+      />,
+    );
 
     expect(screen.getAllByTestId(/^quest-card-[a-z]+$/)).toHaveLength(5);
     expect(screen.getByTestId('daily-quests-progress')).toHaveTextContent('0 of 5 complete');
@@ -38,7 +50,13 @@ describe('DailyQuestsScreen', () => {
   it('marks a quest done and updates the progress summary when tapped', async () => {
     const db = await setupSeededDb();
 
-    await render(<DailyQuestsScreen dbFactory={() => Promise.resolve(db)} date="2026-08-04" />);
+    await render(
+      <DailyQuestsScreen
+        dbFactory={() => Promise.resolve(db)}
+        date="2026-08-04"
+        notificationClientFactory={fakeNotificationClientFactory()}
+      />,
+    );
     const [firstDomainKey] = ['health'];
     fireEvent.press(screen.getByTestId(`quest-card-${firstDomainKey}`));
 
@@ -50,7 +68,12 @@ describe('DailyQuestsScreen', () => {
     const onBack = jest.fn();
 
     await render(
-      <DailyQuestsScreen dbFactory={() => Promise.resolve(db)} date="2026-08-04" onBack={onBack} />,
+      <DailyQuestsScreen
+        dbFactory={() => Promise.resolve(db)}
+        date="2026-08-04"
+        onBack={onBack}
+        notificationClientFactory={fakeNotificationClientFactory()}
+      />,
     );
     fireEvent.press(screen.getByTestId('daily-quests-back'));
 
@@ -59,7 +82,11 @@ describe('DailyQuestsScreen', () => {
 
   it('shows an error state when the database fails to load', async () => {
     await render(
-      <DailyQuestsScreen dbFactory={() => Promise.reject(new Error('boom'))} date="2026-08-04" />,
+      <DailyQuestsScreen
+        dbFactory={() => Promise.reject(new Error('boom'))}
+        date="2026-08-04"
+        notificationClientFactory={fakeNotificationClientFactory()}
+      />,
     );
 
     expect(screen.getByTestId('daily-quests-error')).toBeTruthy();
@@ -73,12 +100,14 @@ describe('DailyQuestsScreen', () => {
       // guarantees crossing the 100xp level-2 threshold, rather than depending
       // on real Math.random() picking a high-enough-xp quest every day.
       const selectionOptions = { random: fixedRandom(0.99, 0) };
+      const notificationClientFactory = fakeNotificationClientFactory();
 
       const { rerender } = await render(
         <DailyQuestsScreen
           dbFactory={() => Promise.resolve(db)}
           date="2026-08-01"
           selectionOptions={selectionOptions}
+          notificationClientFactory={notificationClientFactory}
         />,
       );
 
@@ -90,6 +119,7 @@ describe('DailyQuestsScreen', () => {
               dbFactory={() => Promise.resolve(db)}
               date={date}
               selectionOptions={selectionOptions}
+              notificationClientFactory={notificationClientFactory}
             />,
           );
         }

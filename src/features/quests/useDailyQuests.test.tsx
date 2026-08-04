@@ -1,10 +1,14 @@
 import { render, screen } from '@testing-library/react-native';
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { Text } from 'react-native';
 
 import { getDomainByKey } from '@/data/repositories/domainsRepository';
 import { seedDomains } from '@/data/seed';
 import { seedQuests } from '@/data/seedQuests';
+import {
+  createFakeNotificationClient,
+  type FakeNotificationClient,
+} from '@/data/testUtils/fakeNotificationClient';
 import { createMigratedTestDb } from '@/data/testUtils/nodeSqliteClient';
 import type { SqliteClient } from '@/data/sqliteClient';
 
@@ -12,7 +16,17 @@ import { useDailyQuests } from './useDailyQuests';
 
 function Harness({ db, date }: { db: SqliteClient; date: string }) {
   const dbFactory = useCallback(() => Promise.resolve(db), [db]);
-  const { quests, loading, error, completeQuest } = useDailyQuests(dbFactory, date);
+  const notificationClientRef = useRef<FakeNotificationClient | null>(null);
+  if (!notificationClientRef.current) {
+    notificationClientRef.current = createFakeNotificationClient('granted');
+  }
+  const notificationClientFactory = useCallback(() => notificationClientRef.current!, []);
+  const { quests, loading, error, completeQuest } = useDailyQuests(
+    dbFactory,
+    date,
+    undefined,
+    notificationClientFactory,
+  );
 
   if (loading) {
     return <Text>loading</Text>;

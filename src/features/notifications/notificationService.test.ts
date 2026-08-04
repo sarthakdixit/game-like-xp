@@ -1,10 +1,10 @@
 import { createFakeNotificationClient } from '@/data/testUtils/fakeNotificationClient';
-import { DAILY_REMINDER_ID, DECAY_NUDGE_ID } from '@/domain/notifications';
+import { DECAY_NUDGE_ID, reminderIdForHour } from '@/domain/notifications';
 
 import {
-  ensureDailyReminderScheduled,
   requestNotificationPermissions,
   scheduleDecayNudgeIfNeeded,
+  syncQuestReminders,
 } from './notificationService';
 
 describe('requestNotificationPermissions', () => {
@@ -37,25 +37,94 @@ describe('requestNotificationPermissions', () => {
   });
 });
 
-describe('ensureDailyReminderScheduled', () => {
-  it('schedules the reminder on an empty client', async () => {
+describe('syncQuestReminders', () => {
+  it('schedules a slot for every remaining reminder hour today when quests are incomplete', async () => {
     const client = createFakeNotificationClient();
+    const now = new Date(2026, 7, 4, 0, 0); // midnight -> all 7 default slots remain
 
-    await ensureDailyReminderScheduled(client);
+    await syncQuestReminders(client, now, false);
 
-    expect(client.scheduled.has(DAILY_REMINDER_ID)).toBe(true);
-    const scheduled = client.scheduled.get(DAILY_REMINDER_ID)!;
-    expect(scheduled.schedule).toEqual({ type: 'daily', hour: 9, minute: 0 });
+    expect(client.scheduled.size).toBe(7);
+    for (const hour of [8, 10, 12, 14, 16, 18, 20]) {
+      expect(client.scheduled.has(reminderIdForHour(hour))).toBe(true);
+    }
   });
 
-  it('does not double-schedule when a reminder already exists', async () => {
+  it('only schedules slots at or after the current hour', async () => {
     const client = createFakeNotificationClient();
+    const now = new Date(2026, 7, 4, 13, 0);
 
-    await ensureDailyReminderScheduled(client);
-    await ensureDailyReminderScheduled(client);
-    await ensureDailyReminderScheduled(client);
+    await syncQuestReminders(client, now, false);
 
-    expect(client.scheduled.size).toBe(1);
+    expect(client.scheduled.size).toBe(4); // 14, 16, 18, 20
+    expect(client.scheduled.has(reminderIdForHour(12))).toBe(false);
+    expect(client.scheduled.has(reminderIdForHour(14))).toBe(true);
+  });
+
+  it('does not double-schedule a slot that already exists', async () => {
+    const client = createFakeNotificationClient();
+    const now = new Date(2026, 7, 4, 8, 0);
+
+    await syncQuestReminders(client, now, false);
+    await syncQuestReminders(client, now, false);
+
+    expect(client.scheduled.size).toBe(7);
+  });
+
+  it('cancels every scheduled slot once all quests are complete', async () => {
+    const client = createFakeNotificationClient();
+    const now = new Date(2026, 7, 4, 8, 0);
+    await syncQuestReminders(client, now, false);
+    expect(client.scheduled.size).toBe(7);
+
+    await syncQuestReminders(client, now, true);
+
+    expect(client.scheduled.size).toBe(0);
+  });
+
+  it('cancels slots that have fallen behind "now" since they were scheduled', async () => {
+    const client = createFakeNotificationClient();
+    await syncQuestReminders(client, new Date(2026, 7, 4, 8, 0), false);
+    expect(client.scheduled.has(reminderIdForHour(8))).toBe(true);
+    expect(client.scheduled.has(reminderIdForHour(10))).toBe(true);
+
+    // time has passed — re-syncing at 11:00 should drop the 8 and 10 slots
+    await syncQuestReminders(client, new Date(2026, 7, 4, 11, 0), false);
+
+    expect(client.scheduled.has(reminderIdForHour(8))).toBe(false);
+    expect(client.scheduled.has(reminderIdForHour(10))).toBe(false);
+    expect(client.scheduled.has(reminderIdForHour(12))).toBe(true);
+  });
+
+  it('schedules each slot at its exact hour on the given date', async () => {
+    const client = createFakeNotificationClient();
+    const now = new Date(2026, 7, 4, 8, 0);
+
+    await syncQuestReminders(client, now, false);
+
+    const slot = client.scheduled.get(reminderIdForHour(14))!;
+    const scheduledDate = (slot.schedule as { type: 'date'; date: Date }).date;
+    expect(scheduledDate.getHours()).toBe(14);
+    expect(scheduledDate.getDate()).toBe(4);
+  });
+
+  it('schedules nothing new once past the last slot of the day, but does not error', async () => {
+    const client = createFakeNotificationClient();
+    const now = new Date(2026, 7, 4, 21, 0);
+
+    await syncQuestReminders(client, now, false);
+
+    expect(client.scheduled.size).toBe(0);
+  });
+
+  it('respects a custom quiet-hours window', async () => {
+    const client = createFakeNotificationClient();
+    const now = new Date(2026, 7, 4, 0, 0);
+
+    await syncQuestReminders(client, now, false, { startHour: 12, endHour: 14 });
+
+    expect(client.scheduled.has(reminderIdForHour(12))).toBe(false);
+    expect(client.scheduled.has(reminderIdForHour(14))).toBe(true);
   });
 });
 

@@ -1,8 +1,10 @@
 import {
   buildDecayNudgeBody,
   isQuietHour,
+  reminderIdForHour,
+  remainingReminderHoursToday,
+  reminderSlotHours,
   resolveNotificationTime,
-  shouldScheduleDailyReminder,
 } from './notifications';
 
 describe('isQuietHour', () => {
@@ -65,15 +67,45 @@ describe('resolveNotificationTime', () => {
   });
 });
 
-describe('shouldScheduleDailyReminder', () => {
-  it('is true when no reminder is scheduled yet', () => {
-    expect(shouldScheduleDailyReminder([])).toBe(true);
-    expect(shouldScheduleDailyReminder(['some-other-id'])).toBe(true);
+describe('reminderIdForHour', () => {
+  it('produces a stable, distinct id per hour', () => {
+    expect(reminderIdForHour(8)).toBe('daily-quest-reminder-8');
+    expect(reminderIdForHour(20)).toBe('daily-quest-reminder-20');
+    expect(reminderIdForHour(8)).not.toBe(reminderIdForHour(10));
+  });
+});
+
+describe('reminderSlotHours', () => {
+  it('spaces slots by the interval, skipping default quiet hours (21-8)', () => {
+    expect(reminderSlotHours()).toEqual([8, 10, 12, 14, 16, 18, 20]);
   });
 
-  it('is false when a reminder is already scheduled', () => {
-    expect(shouldScheduleDailyReminder(['daily-quest-reminder'])).toBe(false);
-    expect(shouldScheduleDailyReminder(['x', 'daily-quest-reminder', 'y'])).toBe(false);
+  it('respects a custom interval', () => {
+    expect(reminderSlotHours(4)).toEqual([8, 12, 16, 20]);
+  });
+
+  it('respects a custom quiet-hours window', () => {
+    expect(reminderSlotHours(2, { startHour: 12, endHour: 14 })).toEqual([
+      0, 2, 4, 6, 8, 10, 14, 16, 18, 20, 22,
+    ]);
+  });
+});
+
+describe('remainingReminderHoursToday', () => {
+  it('includes every slot when called at the start of the day', () => {
+    expect(remainingReminderHoursToday(0)).toEqual([8, 10, 12, 14, 16, 18, 20]);
+  });
+
+  it('excludes slots already passed', () => {
+    expect(remainingReminderHoursToday(13)).toEqual([14, 16, 18, 20]);
+  });
+
+  it('is empty once past the last slot of the day', () => {
+    expect(remainingReminderHoursToday(21)).toEqual([]);
+  });
+
+  it('includes a slot exactly at the current hour', () => {
+    expect(remainingReminderHoursToday(14)).toEqual([14, 16, 18, 20]);
   });
 });
 

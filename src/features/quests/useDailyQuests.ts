@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { getDb } from '@/data/db';
+import type { NotificationClient } from '@/data/notificationClient';
+import { getNotificationClient } from '@/data/notifications';
 import { getDomainById } from '@/data/repositories/domainsRepository';
 import { getQuestById } from '@/data/repositories/questsRepository';
 import type { SqliteClient } from '@/data/sqliteClient';
 import { getLocalDateString } from '@/domain/today';
+import { syncQuestReminders } from '@/features/notifications/notificationService';
 
 import {
   completeDailyQuestAndAwardXp,
@@ -68,7 +71,9 @@ async function loadQuestViews(
 /**
  * Loads (and generates, if missing) today's 5 daily quests, enriched with
  * their template text/reward and owning domain. `completeQuest` awards XP
- * through the Batch 3 service and reloads the full list from the database.
+ * through the Batch 3 service, reloads the full list from the database, and
+ * re-syncs the quest-reminder notifications against the fresh completion
+ * status (so reminders stop once every quest is done).
  *
  * `selectionOptions` overrides the quest-selection randomness (for
  * deterministic tests only — production omits it). Pass a stable reference
@@ -79,6 +84,7 @@ export function useDailyQuests(
   dbFactory: () => Promise<SqliteClient> = getDb,
   date: string = getLocalDateString(),
   selectionOptions?: GenerateDailyQuestsOptions,
+  notificationClientFactory: () => NotificationClient = getNotificationClient,
 ): UseDailyQuestsResult {
   const [quests, setQuests] = useState<DailyQuestView[]>([]);
   const [loading, setLoading] = useState(true);
@@ -111,14 +117,21 @@ export function useDailyQuests(
           dailyQuestId,
           new Date().toISOString(),
         );
-        await load();
+
+        const views = await loadQuestViews(db, date, selectionOptions);
+        setQuests(views);
+        setError(null);
+
+        const allComplete = views.every((view) => view.completed);
+        await syncQuestReminders(notificationClientFactory(), new Date(), allComplete);
+
         return { leveledUp: result.leveledUp, unlockedTitle: result.unlockedTitle };
       } catch (caught) {
         setError(caught instanceof Error ? caught : new Error(String(caught)));
         return null;
       }
     },
-    [dbFactory, load],
+    [dbFactory, date, selectionOptions, notificationClientFactory],
   );
 
   return { quests, loading, error, completeQuest };

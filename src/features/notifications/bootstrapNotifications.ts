@@ -1,22 +1,25 @@
 import { getDecayingDomainNames } from '@/data/decayCheck';
 import type { NotificationClient } from '@/data/notificationClient';
 import type { SqliteClient } from '@/data/sqliteClient';
+import { getLocalDateString } from '@/domain/today';
+import { generateDailyQuests } from '@/features/quests/dailyQuestsService';
 
 import {
-  ensureDailyReminderScheduled,
   requestNotificationPermissions,
   scheduleDecayNudgeIfNeeded,
+  syncQuestReminders,
 } from './notificationService';
 
 /**
  * Called once on app startup: requests permission (if undecided), and — only
- * if granted — ensures the daily reminder exists and syncs the decay nudge to
- * whatever is currently decaying. Does nothing destructive if permission is
- * denied; it just skips scheduling.
+ * if granted — reconciles today's quest-reminder slots against completion
+ * status and syncs the decay nudge to whatever is currently decaying. Does
+ * nothing destructive if permission is denied; it just skips scheduling.
  */
 export async function bootstrapNotifications(
   db: SqliteClient,
   notificationClient: NotificationClient,
+  now: Date = new Date(),
 ): Promise<void> {
   const permission = await requestNotificationPermissions(notificationClient);
   console.log('[Chronicle notifications] permission status:', permission);
@@ -25,8 +28,11 @@ export async function bootstrapNotifications(
     return;
   }
 
-  await ensureDailyReminderScheduled(notificationClient);
-  console.log('[Chronicle notifications] daily reminder ensured');
+  const today = getLocalDateString(now);
+  const todaysQuests = await generateDailyQuests(db, today);
+  const allComplete = todaysQuests.every((quest) => quest.completedAt !== null);
+  await syncQuestReminders(notificationClient, now, allComplete);
+  console.log('[Chronicle notifications] quest reminders synced, allComplete:', allComplete);
 
   const decayingDomainNames = await getDecayingDomainNames(db);
   console.log('[Chronicle notifications] decaying domains:', decayingDomainNames);

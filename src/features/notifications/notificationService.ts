@@ -1,12 +1,11 @@
 import type { NotificationClient, PermissionStatus } from '@/data/notificationClient';
 import {
   buildDecayNudgeBody,
-  DAILY_REMINDER_HOUR,
-  DAILY_REMINDER_ID,
-  DAILY_REMINDER_MINUTE,
   DECAY_NUDGE_ID,
+  remainingReminderHoursToday,
+  reminderIdForHour,
+  reminderSlotHours,
   resolveNotificationTime,
-  shouldScheduleDailyReminder,
   type QuietHours,
 } from '@/domain/notifications';
 
@@ -24,19 +23,63 @@ export async function requestNotificationPermissions(
   return client.requestPermission();
 }
 
-/** Idempotent: schedules the recurring daily quest reminder only if one isn't already scheduled. */
-export async function ensureDailyReminderScheduled(client: NotificationClient): Promise<void> {
+/**
+ * Reconciles today's quest-reminder notifications against `allQuestsComplete`:
+ *
+ * - If every quest is done, cancels any remaining reminder slots for today —
+ *   there's nothing left to nag about.
+ * - Otherwise, schedules a one-off notification for every remaining slot hour
+ *   today that isn't already scheduled, and cancels any scheduled slot that's
+ *   no longer relevant (already passed, or left over from a previous day).
+ *
+ * Local notifications can't be conditionally suppressed at fire time — once
+ * scheduled, they fire whether or not the app is open — so "stop nagging
+ * after completion" and "skip quiet hours" both have to be enforced here, by
+ * only ever having the right slots scheduled in the first place. That means
+ * this needs to run again whenever a quest is completed (to cancel the rest
+ * of today) and whenever the app opens (to populate a fresh day's slots).
+ */
+export async function syncQuestReminders(
+  client: NotificationClient,
+  now: Date,
+  allQuestsComplete: boolean,
+  quietHours?: QuietHours,
+): Promise<void> {
+  const allSlotIds = reminderSlotHours(undefined, quietHours).map(reminderIdForHour);
   const existingIds = await client.listScheduledIds();
-  if (!shouldScheduleDailyReminder(existingIds)) {
+
+  if (allQuestsComplete) {
+    for (const id of allSlotIds) {
+      if (existingIds.includes(id)) {
+        await client.cancel(id);
+      }
+    }
     return;
   }
 
-  await client.schedule({
-    id: DAILY_REMINDER_ID,
-    title: 'Chronicle',
-    body: "Today's quests are ready.",
-    schedule: { type: 'daily', hour: DAILY_REMINDER_HOUR, minute: DAILY_REMINDER_MINUTE },
-  });
+  const remainingHours = remainingReminderHoursToday(now.getHours(), undefined, quietHours);
+  const remainingIds = new Set(remainingHours.map(reminderIdForHour));
+
+  for (const id of allSlotIds) {
+    if (existingIds.includes(id) && !remainingIds.has(id)) {
+      await client.cancel(id);
+    }
+  }
+
+  for (const hour of remainingHours) {
+    const id = reminderIdForHour(hour);
+    if (existingIds.includes(id)) {
+      continue;
+    }
+    const fireDate = new Date(now);
+    fireDate.setHours(hour, 0, 0, 0);
+    await client.schedule({
+      id,
+      title: 'Chronicle',
+      body: "Today's quests are still waiting.",
+      schedule: { type: 'date', date: fireDate },
+    });
+  }
 }
 
 /**

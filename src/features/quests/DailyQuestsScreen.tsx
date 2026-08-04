@@ -1,5 +1,6 @@
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import type { NotificationClient } from '@/data/notificationClient';
 import type { SqliteClient } from '@/data/sqliteClient';
 import { FloatingBackButton } from '@/ui/FloatingBackButton';
 import { colors, domainColor } from '@/ui/theme';
@@ -14,6 +15,8 @@ export interface DailyQuestsScreenProps {
   onBack?: () => void;
   /** Test-only override for quest-selection randomness — see useDailyQuests. */
   selectionOptions?: GenerateDailyQuestsOptions;
+  /** Test-only override for the notification client — see useDailyQuests. */
+  notificationClientFactory?: () => NotificationClient;
 }
 
 export function DailyQuestsScreen({
@@ -21,11 +24,13 @@ export function DailyQuestsScreen({
   date,
   onBack,
   selectionOptions,
+  notificationClientFactory,
 }: DailyQuestsScreenProps) {
   const { quests, loading, error, completeQuest } = useDailyQuests(
     dbFactory,
     date,
     selectionOptions,
+    notificationClientFactory,
   );
   const completedCount = quests.filter((quest) => quest.completed).length;
 
