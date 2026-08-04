@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   applyXpGain,
   levelForXp,
+  levelToRadarValue,
   titleForLevel,
   xpForLevel,
   xpProgressToNextLevel,
@@ -188,5 +189,35 @@ describe('applyXpGain', () => {
 
     expect(result.level).toBe(6);
     expect(result.unlockedTitle).toBe('Expert');
+  });
+});
+
+describe('levelToRadarValue', () => {
+  it('is 0 at level 0 (defensive)', () => {
+    expect(levelToRadarValue(0)).toBe(0);
+  });
+
+  it('scales linearly below the cap', () => {
+    expect(levelToRadarValue(1)).toBe(10);
+    expect(levelToRadarValue(5)).toBe(50);
+  });
+
+  it('is exactly 100 at the default cap level (10)', () => {
+    expect(levelToRadarValue(10)).toBe(100);
+  });
+
+  it('clamps at 100 beyond the cap level', () => {
+    expect(levelToRadarValue(11)).toBe(100);
+    expect(levelToRadarValue(999)).toBe(100);
+  });
+
+  it('respects a custom cap level', () => {
+    expect(levelToRadarValue(5, 5)).toBe(100);
+    expect(levelToRadarValue(2, 4)).toBe(50);
+  });
+
+  it('is 0 for a defensive non-positive custom cap instead of dividing by zero', () => {
+    expect(levelToRadarValue(5, 0)).toBe(0);
+    expect(levelToRadarValue(5, -1)).toBe(0);
   });
 });

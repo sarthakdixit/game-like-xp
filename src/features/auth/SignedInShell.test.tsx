@@ -21,7 +21,7 @@ describe('SignedInShell', () => {
     );
 
     expect(screen.getByText('Signed in as Ada Lovelace')).toBeInTheDocument();
-    await waitFor(() => screen.getByTestId('domains-list'));
+    await waitFor(() => screen.getByTestId('home-screen'));
   });
 
   it('falls back to email when display name is missing', async () => {
@@ -34,7 +34,7 @@ describe('SignedInShell', () => {
     );
 
     expect(screen.getByText('Signed in as ada@example.com')).toBeInTheDocument();
-    await waitFor(() => screen.getByTestId('domains-list'));
+    await waitFor(() => screen.getByTestId('home-screen'));
   });
 
   it('falls back to uid when display name and email are both missing', async () => {
@@ -47,7 +47,7 @@ describe('SignedInShell', () => {
     );
 
     expect(screen.getByText('Signed in as abc-123')).toBeInTheDocument();
-    await waitFor(() => screen.getByTestId('domains-list'));
+    await waitFor(() => screen.getByTestId('home-screen'));
   });
 
   it('calls onSignOut when the button is clicked', async () => {
@@ -63,7 +63,7 @@ describe('SignedInShell', () => {
     screen.getByText('Sign out').click();
 
     expect(onSignOut).toHaveBeenCalledTimes(1);
-    await waitFor(() => screen.getByTestId('domains-list'));
+    await waitFor(() => screen.getByTestId('home-screen'));
   });
 
   it('seeds and lists all 5 domains for a freshly signed-in user', async () => {
@@ -75,11 +75,9 @@ describe('SignedInShell', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('Health')).toBeInTheDocument();
-    });
-    for (const name of ['Career', 'Relationships', 'Finance', 'Growth']) {
-      expect(screen.getByText(name)).toBeInTheDocument();
+    await waitFor(() => screen.getByTestId('home-screen'));
+    for (const key of ['health', 'career', 'relationships', 'finance', 'growth']) {
+      expect(screen.getByTestId(`domain-row-${key}`)).toBeInTheDocument();
     }
   });
 });

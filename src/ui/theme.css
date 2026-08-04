@@ -1,0 +1,34 @@
+/*
+ * Palette and type tokens lifted directly from
+ * design/chronicle-ui-style-guide.html — the fantasy/parchment reference.
+ */
+:root {
+  --ink: #2b1b12;
+  --ink-soft: #5a4632;
+  --parchment: #ddc48d;
+  --parchment-light: #ecdcac;
+  --parchment-dark: #c6a96f;
+  --parchment-crease: #b9986088;
+  --leather: #1b140f;
+  --leather-light: #2c2118;
+  --leather-seam: #0f0b08;
+  --gold: #a9782f;
+  --gold-bright: #dcb15a;
+  --seal: #7a1f1f;
+  --seal-bright: #a13a2c;
+
+  --dom-health: #7a1f1f;
+  --dom-career: #2a3b54;
+  --dom-relationships: #6b2942;
+  --dom-finance: #2f5d55;
+  --dom-growth: #3f5230;
+
+  --font-body: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+  --font-display: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+}
+
+.display {
+  font-family: var(--font-display);
+  font-variant: small-caps;
+  letter-spacing: 0.09em;
+}

@@ -69,6 +69,17 @@ export function titleForLevel(level: number): string {
   return title;
 }
 
+/** Level at which a radar chart axis should read 100% — matches the Master title tier. */
+const MAX_RADAR_LEVEL = 10;
+
+/** Converts a level into a 0-100 radar-chart axis value, capped at `maxLevel`. */
+export function levelToRadarValue(level: number, maxLevel: number = MAX_RADAR_LEVEL): number {
+  if (maxLevel <= 0) {
+    return 0;
+  }
+  return Math.min(100, Math.max(0, (level / maxLevel) * 100));
+}
+
 /** Progress within the current level, for rendering an XP bar. */
 export function xpProgressToNextLevel(level: number, xp: number): XpProgress {
   const currentThreshold = xpForLevel(level);

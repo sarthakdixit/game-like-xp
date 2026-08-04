@@ -1,0 +1,26 @@
+.homeScreen {
+  width: 100%;
+}
+
+.homeScreen .screenHead {
+  text-align: center;
+  margin-bottom: 0.6rem;
+}
+
+.homeScreen .screenHead h2 {
+  font-size: 19px;
+  margin: 0;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.homeScreen .chartWrap {
+  margin: 0.9rem 0;
+}
+
+.homeScreen .domainList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 0.9rem;
+}

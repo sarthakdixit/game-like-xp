@@ -1,0 +1,17 @@
+.progressBar {
+  height: 5px;
+  border-radius: 3px;
+  background: #00000020;
+  overflow: hidden;
+}
+
+.progressBar .fill {
+  display: block;
+  height: 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .progressBar .fill {
+    transition: width 0.5s ease;
+  }
+}

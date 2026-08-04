@@ -6,6 +6,8 @@ import { SignedInShell } from '@/features/auth/SignedInShell';
 import { SignInScreen } from '@/features/auth/SignInScreen';
 import { useAuth } from '@/features/auth/useAuth';
 
+import './App.css';
+
 export interface AppProps {
   authClientFactory?: () => AuthClient;
   firestoreClientFactory?: () => FirestoreClient;
@@ -17,19 +19,27 @@ export function App({
 }: AppProps) {
   const { user, loading, error, signIn, signOut } = useAuth(authClientFactory);
 
-  if (loading) {
-    return <div data-testid="app-loading">Loading…</div>;
-  }
-
-  if (!user) {
-    return <SignInScreen onSignIn={() => void signIn()} error={error} />;
-  }
-
   return (
-    <SignedInShell
-      user={user}
-      onSignOut={() => void signOut()}
-      firestoreClientFactory={firestoreClientFactory}
-    />
+    <div className="stage">
+      <div className="masthead">
+        <p className="display mark">Chronicle</p>
+        <p className="sub">A life, kept like a saga</p>
+        <div className="divider" />
+      </div>
+
+      <div className="screen">
+        {loading ? (
+          <div data-testid="app-loading">Loading…</div>
+        ) : !user ? (
+          <SignInScreen onSignIn={() => void signIn()} error={error} />
+        ) : (
+          <SignedInShell
+            user={user}
+            onSignOut={() => void signOut()}
+            firestoreClientFactory={firestoreClientFactory}
+          />
+        )}
+      </div>
+    </div>
   );
 }

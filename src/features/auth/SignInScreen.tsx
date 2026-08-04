@@ -1,3 +1,5 @@
+import './SignInScreen.css';
+
 export interface SignInScreenProps {
   onSignIn: () => void;
   error?: Error | null;
@@ -5,9 +7,9 @@ export interface SignInScreenProps {
 
 export function SignInScreen({ onSignIn, error }: SignInScreenProps) {
   return (
-    <div data-testid="sign-in-screen">
-      <h1>Chronicle</h1>
-      <button type="button" onClick={onSignIn}>
+    <div className="signInScreen" data-testid="sign-in-screen">
+      <p className="prompt">Sign in to open your character sheet.</p>
+      <button className="signInButton" type="button" onClick={onSignIn}>
         Sign in with Google
       </button>
       {error ? (

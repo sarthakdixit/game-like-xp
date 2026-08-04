@@ -1,0 +1,34 @@
+.domainRow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.domainRow .icon {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  color: var(--tag);
+}
+
+.domainRow .name {
+  font-size: 13px;
+  flex: 1;
+  color: var(--ink);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.domainRow .lv {
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-variant: small-caps;
+  flex: none;
+}
+
+.domainRow .bar {
+  width: 56px;
+  flex: none;
+}
