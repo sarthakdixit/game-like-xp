@@ -1,4 +1,4 @@
-import { applyXpGain, levelForXp, titleForLevel, xpForLevel } from './leveling';
+import { applyXpGain, levelForXp, levelToRadarValue, titleForLevel, xpForLevel } from './leveling';
 
 describe('xpForLevel', () => {
   it('requires 0 xp for level 1', () => {
@@ -123,5 +123,26 @@ describe('applyXpGain', () => {
       leveledUp: false,
       unlockedTitle: null,
     });
+  });
+});
+
+describe('levelToRadarValue', () => {
+  it('is 0 at level 0 or below', () => {
+    expect(levelToRadarValue(0)).toBe(0);
+    expect(levelToRadarValue(-3)).toBe(0);
+  });
+
+  it('scales linearly toward level 10', () => {
+    expect(levelToRadarValue(1)).toBe(10);
+    expect(levelToRadarValue(5)).toBe(50);
+  });
+
+  it('reaches exactly 100 at level 10', () => {
+    expect(levelToRadarValue(10)).toBe(100);
+  });
+
+  it('clamps at 100 beyond level 10', () => {
+    expect(levelToRadarValue(15)).toBe(100);
+    expect(levelToRadarValue(100)).toBe(100);
   });
 });

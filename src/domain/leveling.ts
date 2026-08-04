@@ -14,6 +14,9 @@ const TITLE_TIERS: TitleTier[] = [
   { minLevel: 10, title: 'Master' },
 ];
 
+/** The level at which a domain's radar-chart arm reads as fully filled (100). */
+const RADAR_MAX_LEVEL = 10;
+
 export interface DomainProgress {
   level: number;
   xp: number;
@@ -59,6 +62,18 @@ export function titleForLevel(level: number): string {
     }
   }
   return title;
+}
+
+/**
+ * Maps a domain's level to a 0-100 radar-chart value, reaching 100 at
+ * `RADAR_MAX_LEVEL` (which lines up with the Master title tier). Clamped so
+ * levels beyond that don't overflow the chart.
+ */
+export function levelToRadarValue(level: number): number {
+  if (level <= 0) {
+    return 0;
+  }
+  return Math.min(100, (level / RADAR_MAX_LEVEL) * 100);
 }
 
 /**
