@@ -1,14 +1,18 @@
-# Chronicle — requirements
+# Chronicle — requirements (v2, web rebuild)
+
+Supersedes the original React Native/Expo version of this document. Core game rules (domains, XP,
+leveling, decay, quests) are unchanged; platform and a few supporting services are not.
 
 ## 1. Vision
 
-Gamify daily life as an RPG character sheet. Real habits and behaviors across five life domains are tracked as stats; completing daily quests earns XP that levels those stats up over time.
+Gamify daily life as an RPG character sheet. Real habits and behaviors across five life domains are
+tracked as stats; completing daily quests earns XP that levels those stats up over time.
 
 ## 2. Platform
 
-- React Native (Expo), targeting iOS and Android
-- Primary dev/test target: Android
-- iOS built and supported throughout, tested less frequently in early batches
+- React web app (Vite + React + TypeScript, strict mode), running in a desktop or mobile browser
+- No native app — no React Native, no Expo, no app-store install
+- Responsive layout: usable on both desktop and mobile browser widths
 
 ## 3. Stat system
 
@@ -21,48 +25,74 @@ Gamify daily life as an RPG character sheet. Real habits and behaviors across fi
 - Leveling is per-stat only — there is no single combined character level
 - New players start at level 1 across every stat and child stat
 - Leveling up unlocks a cosmetic title (e.g. Novice → Adept → Master) **and** new quest tiers
-- Decay: a neglected stat decays moderately (noticeable after 1–2 missed days, steady drop until re-engagement); no floor, no pause/vacation mode in MVP
+- Decay: a neglected stat decays moderately (noticeable after 1–2 missed days, steady drop until
+  re-engagement); no floor, no pause/vacation mode in MVP
 
 ## 4. Quests
 
 - 5 active daily quests, one per top-level domain
 - Mixed tone: mostly easy/low-friction quests plus an occasional harder "boss quest" for bigger XP
-- Generation model: a local template bank drives day-to-day quests; when the AI-personalization layer ships (Phase 2), it periodically refreshes/customizes the bank when the device is online
-- A starter bank of ~5–10 template quests per domain is drafted as part of Batch 3 (see PLAN.md)
+- Generation model: a template bank drives day-to-day quests; when the AI-personalization layer
+  ships (Phase 2), it periodically refreshes/customizes the bank when the device is online
+- A starter bank of ~5–10 template quests per domain is drafted as part of the quest-engine batch
 
 ## 5. Data & sync
 
-- Local-first: SQLite on-device, fully offline-capable for all MVP functionality
-- HealthKit (iOS) / Google Fit (Android) auto-import is in MVP scope, feeding the Health domain's child stats (steps, sleep, workouts)
-- Manual JSON export/import via the OS share sheet ships in MVP as a backup safety net against reinstall data loss
-- Cloud sync / accounts (Supabase) is explicitly **out** of MVP — Phase 2
+- **Firebase Firestore** is the data store — no local SQLite, no offline-only requirement
+- **Firebase Auth, Google sign-in only** — every user has a real account; there is no anonymous/
+  no-login mode
+- **Multi-device sync is in MVP now** (previously Phase 2): signing in on a second device shows the
+  same character sheet, quests, and history
+- Manual JSON export/import is dropped — Firestore is itself the durable copy, so the local backup
+  safety net from the SQLite version no longer serves a purpose
+- Firestore's built-in offline cache gives basic resilience to flaky connectivity, but full offline
+  operation (e.g. completing quests with no network at all, ever) is not a requirement
 
-## 6. Notifications
+## 6. Health/fitness input
 
-- Core MVP feature: daily quest delivery reminder and decay/streak nudges
-- Exact timing/frequency is a Batch 7 implementation decision, not yet pinned
+- No HealthKit/Google Fit/Health Connect integration — there is no browser API for on-device health
+  data, and this is a web app now
+- Replaced with **manual entry**: a simple form where the user logs today's steps, sleep duration,
+  and exercise minutes; the same category of mapping logic (steps/sleep/exercise → a Fitness/Sleep
+  stat delta) still applies, just fed by a form instead of a device API
 
-## 7. Visual identity
+## 7. Notifications
 
-- Fantasy/parchment skeuomorphic aesthetic — reference: [design/chronicle-ui-style-guide.html](design/chronicle-ui-style-guide.html)
+- Best-effort **Web Notifications API** — daily quest reminder and decay/streak nudges
+- Explicit, known limitation: browsers cannot reliably fire a notification on a schedule if the tab
+  or browser is fully closed. This works well while the app is open in a tab, and inconsistently
+  across browsers/OSes when backgrounded; there is no equivalent to the old app's guaranteed
+  native-OS-scheduled delivery
+- Exact timing/frequency is an implementation decision for the notifications batch, not pinned here
+
+## 8. Visual identity
+
+- Fantasy/parchment skeuomorphic aesthetic, carried over from the original style guide —
+  reference: [design/chronicle-ui-style-guide.html](design/chronicle-ui-style-guide.html) — translated
+  from React Native `StyleSheet` to CSS
 - App name: **Chronicle**
 
-## 8. Audience & scope
+## 9. Audience & scope
 
-- Primary user is the developer, for personal use
-- Content (domains, child stats, quest bank) is data-driven rather than hardcoded, so a public release later doesn't require a rewrite — but public-release polish itself (onboarding for others, store listing, monetization) is out of scope for now
+- Primary user is the developer, for personal use; multi-device sync exists for that one person's
+  convenience (phone browser + laptop browser), not for a multi-tenant public product
+- Content (domains, child stats, quest bank) is data-driven rather than hardcoded, so a public
+  release later doesn't require a rewrite — but public-release polish itself (onboarding for other
+  users, monetization) is out of scope for now
 
-## 9. In scope for MVP
+## 10. In scope for MVP
 
 - Stat/domain data model, spider charts, per-stat leveling, decay
 - Daily quest generation (template-based) and completion flow
-- HealthKit / Google Fit auto-import for the Health domain
-- Local notifications
-- Local SQLite storage plus manual export/import backup
+- Firebase Auth (Google sign-in) + Firestore as the data store, with multi-device sync
+- Manual activity-entry form feeding Fitness/Sleep stat deltas
+- Best-effort Web Notifications
+- Firebase Hosting deployment
 
-## 10. Explicitly out of scope for MVP (Phase 2+)
+## 11. Explicitly out of scope for MVP (Phase 2+)
 
-- Supabase cloud sync, accounts, multi-device
+- Any non-Google sign-in method (email/password, other OAuth providers)
 - Online AI-personalized quest generation (MVP ships template-bank-only)
 - Vacation/pause mode for decay
-- Public release readiness
+- Public release readiness (onboarding for other users, store/marketing listing, monetization)
+- True offline-first operation (Firestore's default local cache is enough for MVP)
