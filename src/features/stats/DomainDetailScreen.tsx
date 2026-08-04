@@ -1,5 +1,6 @@
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
 
 import type { SqliteClient } from '@/data/sqliteClient';
 import { titleForLevel, xpForLevel, xpProgressToNextLevel } from '@/domain/leveling';
@@ -44,7 +45,16 @@ export function DomainDetailScreen({ domainId, dbFactory, onBack }: DomainDetail
           pressed && styles.floatingBackPressed,
         ]}
       >
-        <Text style={styles.floatingBackIcon}>&larr;</Text>
+        <Svg width={18} height={18} viewBox="0 0 24 24">
+          <Path
+            d="M15 18l-6-6 6-6"
+            fill="none"
+            stroke={colors.goldBright}
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </Svg>
       </Pressable>
     </View>
   );
@@ -127,10 +137,6 @@ const styles = StyleSheet.create({
   },
   floatingBackPressed: {
     opacity: 0.8,
-  },
-  floatingBackIcon: {
-    fontSize: 18,
-    color: colors.goldBright,
   },
   domainLabel: {
     fontSize: 13,
