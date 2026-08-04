@@ -13,7 +13,28 @@ export interface RadarChartProps {
 }
 
 const CHART_SIZE = 200; // matches radarGeometry's default center (100,100) / radius 80
-const VIEWBOX_PADDING = 40; // generous margin so axis labels never clip
+// Labels wrap inside a fixed-width box (see LABEL_BOX_WIDTH) instead of running out as a single
+// line, so this only needs to fit that box — not an arbitrarily long axis label.
+const VIEWBOX_PADDING = 66;
+const LABEL_BOX_WIDTH = 64;
+const LABEL_BOX_HEIGHT = 34;
+
+const TEXT_ALIGN_FOR_ANCHOR: Record<'start' | 'middle' | 'end', 'left' | 'center' | 'right'> = {
+  start: 'left',
+  middle: 'center',
+  end: 'right',
+};
+
+/** Left edge of the label's wrapping box, given where its text should anchor. */
+function labelBoxX(anchorX: number, anchor: 'start' | 'middle' | 'end'): number {
+  if (anchor === 'start') {
+    return anchorX;
+  }
+  if (anchor === 'end') {
+    return anchorX - LABEL_BOX_WIDTH;
+  }
+  return anchorX - LABEL_BOX_WIDTH / 2;
+}
 
 /**
  * Generic, data-driven N-axis radar chart — nothing here is hardcoded to
@@ -65,18 +86,32 @@ export function RadarChart({ axes, color = 'var(--gold)' }: RadarChartProps) {
       />
 
       {geometry.labels.map((label) => (
-        <text
+        <foreignObject
           key={label.key}
-          data-testid={`radar-chart-label-${label.key}`}
-          x={label.x}
-          y={label.y}
-          textAnchor={label.anchor}
-          fontSize={10}
-          fill="var(--ink-soft)"
-          style={{ fontVariant: 'small-caps' }}
+          x={labelBoxX(label.x, label.anchor)}
+          y={label.y - LABEL_BOX_HEIGHT / 2}
+          width={LABEL_BOX_WIDTH}
+          height={LABEL_BOX_HEIGHT}
+          style={{ overflow: 'visible' }}
         >
-          {label.text}
-        </text>
+          <div
+            data-testid={`radar-chart-label-${label.key}`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: TEXT_ALIGN_FOR_ANCHOR[label.anchor],
+              height: '100%',
+              fontSize: 10,
+              lineHeight: 1.2,
+              color: 'var(--ink-soft)',
+              fontVariant: 'small-caps',
+              textAlign: TEXT_ALIGN_FOR_ANCHOR[label.anchor],
+              wordBreak: 'break-word',
+            }}
+          >
+            {label.text}
+          </div>
+        </foreignObject>
       ))}
     </svg>
   );
