@@ -1,9 +1,8 @@
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Path } from 'react-native-svg';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { SqliteClient } from '@/data/sqliteClient';
 import { titleForLevel, xpForLevel, xpProgressToNextLevel } from '@/domain/leveling';
+import { FloatingBackButton } from '@/ui/FloatingBackButton';
 import { ProgressBar } from '@/ui/ProgressBar';
 import { RadarChart } from '@/ui/RadarChart';
 import { colors, domainColor } from '@/ui/theme';
@@ -19,7 +18,6 @@ export interface DomainDetailScreenProps {
 
 export function DomainDetailScreen({ domainId, dbFactory, onBack }: DomainDetailScreenProps) {
   const { domain, childStats, loading, error } = useDomainDetail(domainId, dbFactory);
-  const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.screen}>
@@ -35,27 +33,7 @@ export function DomainDetailScreen({ domainId, dbFactory, onBack }: DomainDetail
         )}
       </ScrollView>
 
-      <Pressable
-        onPress={onBack}
-        testID="domain-detail-back"
-        hitSlop={8}
-        style={({ pressed }) => [
-          styles.floatingBack,
-          { top: insets.top + 12 },
-          pressed && styles.floatingBackPressed,
-        ]}
-      >
-        <Svg width={18} height={18} viewBox="0 0 24 24">
-          <Path
-            d="M15 18l-6-6 6-6"
-            fill="none"
-            stroke={colors.goldBright}
-            strokeWidth={2.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
-      </Pressable>
+      <FloatingBackButton onPress={onBack} testID="domain-detail-back" />
     </View>
   );
 }
@@ -108,8 +86,6 @@ function DomainDetailContent({ domain, childStats }: DomainDetailContentProps) {
   );
 }
 
-const BACK_BUTTON_SIZE = 40;
-
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -119,24 +95,6 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 64,
     alignItems: 'center',
-  },
-  floatingBack: {
-    position: 'absolute',
-    left: 16,
-    width: BACK_BUTTON_SIZE,
-    height: BACK_BUTTON_SIZE,
-    borderRadius: BACK_BUTTON_SIZE / 2,
-    backgroundColor: colors.leather,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  floatingBackPressed: {
-    opacity: 0.8,
   },
   domainLabel: {
     fontSize: 13,

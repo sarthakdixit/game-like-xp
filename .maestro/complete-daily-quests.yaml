@@ -1,0 +1,36 @@
+# Golden path (PLAN.md Batch 6 gate): complete all 5 daily quests and confirm
+# the progress summary reaches 5 of 5. Uses testID selectors (id:) rather than
+# quest text, since which specific quest template gets picked per domain is
+# randomized in production — only the domain-keyed testID is stable.
+#
+# Run with: maestro test .maestro/complete-daily-quests.yaml
+# Requires a running Android emulator / iOS simulator / connected device with
+# a debug build of the app installed (`npx expo run:android` or `run:ios`).
+#
+# Note: this flow proves the completion loop itself works end-to-end on a
+# real device. It does NOT (and can't, in a single run) prove a level-up
+# fires — a domain needs several days of accumulated XP to cross a level
+# threshold, which isn't practical to script as a live multi-day device flow.
+# That specific assertion is covered by the Jest integration test in
+# DailyQuestsScreen.test.tsx ("golden path" describe block), which simulates
+# 7 in-game days against the real leveling engine.
+appId: com.chronicle.app
+---
+- launchApp
+- assertVisible: "Chronicle"
+- tapOn: "Today's quests"
+- assertVisible: "Five quests"
+- tapOn:
+    id: "quest-card-health"
+- tapOn:
+    id: "quest-card-career"
+- tapOn:
+    id: "quest-card-relationships"
+- tapOn:
+    id: "quest-card-finance"
+- tapOn:
+    id: "quest-card-growth"
+- assertVisible: "5 of 5 complete"
+- tapOn:
+    id: "daily-quests-back"
+- assertVisible: "Your standing"

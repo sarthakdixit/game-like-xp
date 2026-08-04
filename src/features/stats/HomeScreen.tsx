@@ -1,4 +1,4 @@
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { SqliteClient } from '@/data/sqliteClient';
 import { levelToRadarValue } from '@/domain';
@@ -11,9 +11,10 @@ import { useDomains } from './useDomains';
 export interface HomeScreenProps {
   dbFactory?: () => Promise<SqliteClient>;
   onSelectDomain?: (domainId: string) => void;
+  onOpenDailyQuests?: () => void;
 }
 
-export function HomeScreen({ dbFactory, onSelectDomain }: HomeScreenProps) {
+export function HomeScreen({ dbFactory, onSelectDomain, onOpenDailyQuests }: HomeScreenProps) {
   const { domains, loading, error } = useDomains(dbFactory);
 
   const axes = domains.map((domain) => ({
@@ -26,6 +27,14 @@ export function HomeScreen({ dbFactory, onSelectDomain }: HomeScreenProps) {
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Chronicle</Text>
       <Text style={styles.subtitle}>Your standing</Text>
+
+      <Pressable
+        onPress={onOpenDailyQuests}
+        testID="home-screen-open-daily-quests"
+        style={styles.questsButton}
+      >
+        <Text style={styles.questsButtonText}>Today&apos;s quests &rsaquo;</Text>
+      </Pressable>
 
       {loading ? (
         <ActivityIndicator testID="home-screen-loading" color={colors.gold} />
@@ -71,6 +80,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.inkSoft,
     marginBottom: 12,
+  },
+  questsButton: {
+    backgroundColor: colors.seal,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginBottom: 12,
+  },
+  questsButtonText: {
+    color: '#f2ddd2',
+    fontSize: 14,
+    fontWeight: '600',
   },
   chartWrap: {
     marginVertical: 12,

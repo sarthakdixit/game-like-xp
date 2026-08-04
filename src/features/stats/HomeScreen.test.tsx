@@ -46,4 +46,16 @@ describe('HomeScreen', () => {
     expect(onSelectDomain).toHaveBeenCalledTimes(1);
     expect(typeof onSelectDomain.mock.calls[0][0]).toBe('string');
   });
+
+  it('calls onOpenDailyQuests when the quests button is tapped', async () => {
+    const db = await createMigratedTestDb();
+    const onOpenDailyQuests = jest.fn();
+
+    await render(
+      <HomeScreen dbFactory={() => Promise.resolve(db)} onOpenDailyQuests={onOpenDailyQuests} />,
+    );
+    fireEvent.press(screen.getByTestId('home-screen-open-daily-quests'));
+
+    expect(onOpenDailyQuests).toHaveBeenCalledTimes(1);
+  });
 });

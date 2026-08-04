@@ -2,12 +2,14 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { DailyQuestsScreen } from '@/features/quests/DailyQuestsScreen';
 import { DomainDetailScreen } from '@/features/stats/DomainDetailScreen';
 import { HomeScreen } from '@/features/stats/HomeScreen';
 
 export type RootStackParamList = {
   Home: undefined;
   DomainDetail: { domainId: string };
+  DailyQuests: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -26,6 +28,7 @@ export function RootNavigator() {
             {({ navigation }) => (
               <HomeScreen
                 onSelectDomain={(domainId) => navigation.navigate('DomainDetail', { domainId })}
+                onOpenDailyQuests={() => navigation.navigate('DailyQuests')}
               />
             )}
           </Stack.Screen>
@@ -36,6 +39,9 @@ export function RootNavigator() {
                 onBack={() => navigation.goBack()}
               />
             )}
+          </Stack.Screen>
+          <Stack.Screen name="DailyQuests">
+            {({ navigation }) => <DailyQuestsScreen onBack={() => navigation.goBack()} />}
           </Stack.Screen>
         </Stack.Navigator>
       </NavigationContainer>
