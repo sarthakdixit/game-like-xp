@@ -1,10 +1,37 @@
 rules_version = '2';
 
-// Deny-by-default: Batch 1 only needs Auth wired up, no Firestore reads/writes
-// yet, so there is nothing to allow. Batch 2 adds the users/{uid}/... data
-// model and the real per-user-isolation rules alongside it.
+// Every document lives under users/{uid}/... — a user may only read or
+// write their own subtree. There is no shared/public data in this app, so
+// this one helper covers every collection below.
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    match /users/{uid} {
+      match /domains/{domainId} {
+        allow read, write: if isOwner(uid);
+
+        match /childStats/{childStatId} {
+          allow read, write: if isOwner(uid);
+        }
+      }
+
+      match /quests/{questId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      match /dailyQuests/{dailyQuestId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      match /xpEvents/{xpEventId} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    // Deny everything else by default (no shared/public collections exist).
     match /{document=**} {
       allow read, write: if false;
     }

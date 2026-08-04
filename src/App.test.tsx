@@ -2,14 +2,25 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { createFakeAuthClient } from '@/data/testUtils/fakeAuthClient';
+import { createFakeFirestoreClient } from '@/data/testUtils/fakeFirestoreClient';
 
 import { App } from './App';
+
+function fakeFirestoreClientFactory() {
+  const client = createFakeFirestoreClient();
+  return () => client;
+}
 
 describe('App', () => {
   it('shows the sign-in screen when signed out', async () => {
     const client = createFakeAuthClient(null);
 
-    render(<App authClientFactory={() => client} />);
+    render(
+      <App
+        authClientFactory={() => client}
+        firestoreClientFactory={fakeFirestoreClientFactory()}
+      />,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId('sign-in-screen')).toBeInTheDocument();
@@ -25,7 +36,12 @@ describe('App', () => {
       photoURL: null,
     });
 
-    render(<App authClientFactory={() => client} />);
+    render(
+      <App
+        authClientFactory={() => client}
+        firestoreClientFactory={fakeFirestoreClientFactory()}
+      />,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId('signed-in-shell')).toBeInTheDocument();
@@ -35,7 +51,12 @@ describe('App', () => {
 
   it('moves from sign-in to signed-in shell after clicking sign in', async () => {
     const client = createFakeAuthClient(null);
-    render(<App authClientFactory={() => client} />);
+    render(
+      <App
+        authClientFactory={() => client}
+        firestoreClientFactory={fakeFirestoreClientFactory()}
+      />,
+    );
     await waitFor(() => screen.getByTestId('sign-in-screen'));
 
     screen.getByText('Sign in with Google').click();
@@ -52,7 +73,12 @@ describe('App', () => {
       email: 'ada@example.com',
       photoURL: null,
     });
-    render(<App authClientFactory={() => client} />);
+    render(
+      <App
+        authClientFactory={() => client}
+        firestoreClientFactory={fakeFirestoreClientFactory()}
+      />,
+    );
     await waitFor(() => screen.getByTestId('signed-in-shell'));
 
     screen.getByText('Sign out').click();
