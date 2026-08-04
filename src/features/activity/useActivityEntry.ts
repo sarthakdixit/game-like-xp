@@ -49,6 +49,7 @@ export function useActivityEntry(
           setLoading(false);
         }
       } catch (caught) {
+        console.error('Failed to load today’s activity entry:', caught);
         if (!cancelled) {
           setLoadError(caught instanceof Error ? caught : new Error(String(caught)));
           setLoading(false);
