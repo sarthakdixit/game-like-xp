@@ -49,6 +49,14 @@ function labelAnchorFor(point: Point, center: number): LabelAnchor {
 }
 
 /**
+ * Conservative estimate of rendered text width at the chart's fontSize (11) —
+ * real glyphs are narrower on average, so a label that fits under this
+ * estimate fits in practice too. Kept in sync with the fontSize RadarChart
+ * actually renders labels at.
+ */
+const PX_PER_CHAR = 7;
+
+/**
  * Computes every point needed to draw an N-axis radar chart, purely from its
  * inputs. Values are clamped to `[0, maxValue]` before being placed on their axis.
  * Returns `null` below 3 axes, since a polygon needs at least a triangle.
@@ -56,8 +64,11 @@ function labelAnchorFor(point: Point, center: number): LabelAnchor {
  * `chartSize` is the diameter of the plotted polygon itself. The returned
  * `canvasSize` is larger — it reserves margin on every side for axis label
  * text, which extends outward from its anchor point and would otherwise get
- * clipped by the SVG viewBox at the widest axes (whichever sit closest to
- * horizontal, since that's where label text extends furthest sideways).
+ * clipped by the SVG viewBox. The margin is sized from the *longest label in
+ * `axes`*, not a guessed constant: a label sitting on a horizontal axis (the
+ * worst case — e.g. a 4-axis chart's leftmost/rightmost point) needs almost
+ * its full text width again in margin, regardless of chart size, since fixed
+ * font size doesn't shrink with the chart.
  */
 export function buildRadarLayout(
   axes: RadarChartAxis[],
@@ -69,10 +80,9 @@ export function buildRadarLayout(
     return null;
   }
 
-  // Label text is a fixed font size regardless of chart size, so the margin can't be
-  // purely proportional — a small chart needs just as much absolute room for "Relationships"
-  // as a large one. Floor it at a fixed pixel minimum alongside the proportional component.
-  const labelMargin = Math.max(chartSize * 0.3, 70);
+  const longestLabelLength = axes.reduce((max, axis) => Math.max(max, axis.label.length), 0);
+  const textMargin = longestLabelLength * PX_PER_CHAR + 12;
+  const labelMargin = Math.max(chartSize * 0.15, textMargin);
   const canvasSize = chartSize + labelMargin * 2;
   const centerValue = canvasSize / 2;
   const center: Point = { x: centerValue, y: centerValue };

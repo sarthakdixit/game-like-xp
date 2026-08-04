@@ -1,4 +1,5 @@
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { SqliteClient } from '@/data/sqliteClient';
 import { titleForLevel, xpForLevel, xpProgressToNextLevel } from '@/domain/leveling';
@@ -17,23 +18,35 @@ export interface DomainDetailScreenProps {
 
 export function DomainDetailScreen({ domainId, dbFactory, onBack }: DomainDetailScreenProps) {
   const { domain, childStats, loading, error } = useDomainDetail(domainId, dbFactory);
+  const insets = useSafeAreaInsets();
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Pressable onPress={onBack} testID="domain-detail-back" hitSlop={8}>
-        <Text style={styles.back}>&larr; Back to sheet</Text>
-      </Pressable>
+    <View style={styles.screen}>
+      <ScrollView contentContainerStyle={styles.content}>
+        {loading ? (
+          <ActivityIndicator testID="domain-detail-loading" color={colors.gold} />
+        ) : error || !domain ? (
+          <Text testID="domain-detail-error" style={styles.errorText}>
+            Couldn&apos;t load this domain.
+          </Text>
+        ) : (
+          <DomainDetailContent domain={domain} childStats={childStats} />
+        )}
+      </ScrollView>
 
-      {loading ? (
-        <ActivityIndicator testID="domain-detail-loading" color={colors.gold} />
-      ) : error || !domain ? (
-        <Text testID="domain-detail-error" style={styles.errorText}>
-          Couldn&apos;t load this domain.
-        </Text>
-      ) : (
-        <DomainDetailContent domain={domain} childStats={childStats} />
-      )}
-    </ScrollView>
+      <Pressable
+        onPress={onBack}
+        testID="domain-detail-back"
+        hitSlop={8}
+        style={({ pressed }) => [
+          styles.floatingBack,
+          { top: insets.top + 12 },
+          pressed && styles.floatingBackPressed,
+        ]}
+      >
+        <Text style={styles.floatingBackIcon}>&larr;</Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -85,6 +98,8 @@ function DomainDetailContent({ domain, childStats }: DomainDetailContentProps) {
   );
 }
 
+const BACK_BUTTON_SIZE = 40;
+
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -92,13 +107,30 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
+    paddingTop: 64,
     alignItems: 'center',
   },
-  back: {
-    alignSelf: 'flex-start',
-    fontSize: 12,
-    color: colors.inkSoft,
-    marginBottom: 12,
+  floatingBack: {
+    position: 'absolute',
+    left: 16,
+    width: BACK_BUTTON_SIZE,
+    height: BACK_BUTTON_SIZE,
+    borderRadius: BACK_BUTTON_SIZE / 2,
+    backgroundColor: colors.leather,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  floatingBackPressed: {
+    opacity: 0.8,
+  },
+  floatingBackIcon: {
+    fontSize: 18,
+    color: colors.goldBright,
   },
   domainLabel: {
     fontSize: 13,

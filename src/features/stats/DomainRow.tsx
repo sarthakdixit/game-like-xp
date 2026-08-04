@@ -18,7 +18,7 @@ export function DomainRow({ domain, onPress }: DomainRowProps) {
     <Pressable
       onPress={onPress}
       testID={`domain-row-${domain.key}`}
-      style={styles.row}
+      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
       accessibilityRole="button"
       accessibilityLabel={`${domain.name}, level ${domain.level}`}
     >
@@ -31,16 +31,25 @@ export function DomainRow({ domain, onPress }: DomainRowProps) {
       <View style={styles.barWrap}>
         <ProgressBar testID={`domain-row-${domain.key}-bar`} value={radarValue} color={color} />
       </View>
+      <Text style={styles.chevron}>&rsaquo;</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 9,
-    paddingVertical: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    backgroundColor: colors.parchmentLight,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.parchmentDark,
+  },
+  cardPressed: {
+    backgroundColor: colors.parchmentDark,
   },
   dot: {
     width: 10,
@@ -58,5 +67,10 @@ const styles = StyleSheet.create({
   },
   barWrap: {
     width: 56,
+  },
+  chevron: {
+    fontSize: 16,
+    color: colors.inkSoft,
+    marginLeft: 2,
   },
 });

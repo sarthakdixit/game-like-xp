@@ -189,5 +189,41 @@ describe('buildRadarLayout', () => {
         layout.canvasSize,
       );
     });
+
+    function assertAllLabelsFitCanvas(axes: { key: string; label: string; value: number }[]) {
+      for (const chartSize of [160, 220, 300]) {
+        const layout = buildRadarLayout(axes, 100, chartSize)!;
+
+        for (const axis of layout.axes) {
+          const extent = textExtent(axis.label);
+          if (axis.labelAnchor === 'start') {
+            expect(axis.labelPoint.x + extent).toBeLessThanOrEqual(layout.canvasSize);
+          } else if (axis.labelAnchor === 'end') {
+            expect(axis.labelPoint.x - extent).toBeGreaterThanOrEqual(0);
+          }
+        }
+      }
+    }
+
+    it('regression: fits "Mental wellbeing" on a 4-axis child-stat chart (real Health domain data)', () => {
+      // This is the exact case that clipped in production: a 4-axis chart puts
+      // one axis directly on the horizontal (cos = ±1), which is a more extreme
+      // position than any axis in a 5-gon, and "Mental wellbeing" is longer than
+      // any top-level domain name.
+      assertAllLabelsFitCanvas([
+        { key: 'fitness', label: 'Fitness', value: 65 },
+        { key: 'nutrition', label: 'Nutrition', value: 45 },
+        { key: 'sleep', label: 'Sleep', value: 55 },
+        { key: 'mental_wellbeing', label: 'Mental wellbeing', value: 50 },
+      ]);
+    });
+
+    it('handles a single very long label without clipping, regardless of axis count', () => {
+      assertAllLabelsFitCanvas([
+        { key: 'a', label: 'A', value: 10 },
+        { key: 'b', label: 'B', value: 10 },
+        { key: 'c', label: 'A label longer than any real one we expect', value: 10 },
+      ]);
+    });
   });
 });

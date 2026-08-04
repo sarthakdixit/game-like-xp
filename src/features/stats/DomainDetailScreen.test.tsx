@@ -56,7 +56,7 @@ describe('DomainDetailScreen', () => {
     expect(screen.getByText('650xp')).toBeTruthy();
   });
 
-  it('calls onBack when the back link is pressed', async () => {
+  it('calls onBack when the floating back button is pressed', async () => {
     const { db, domainId } = await seedDomainWithChildStats(3);
     const onBack = jest.fn();
 

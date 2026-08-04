@@ -1,5 +1,6 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { DomainDetailScreen } from '@/features/stats/DomainDetailScreen';
 import { HomeScreen } from '@/features/stats/HomeScreen';
@@ -18,24 +19,26 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
  */
 export function RootNavigator() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Home">
-          {({ navigation }) => (
-            <HomeScreen
-              onSelectDomain={(domainId) => navigation.navigate('DomainDetail', { domainId })}
-            />
-          )}
-        </Stack.Screen>
-        <Stack.Screen name="DomainDetail">
-          {({ navigation, route }) => (
-            <DomainDetailScreen
-              domainId={route.params.domainId}
-              onBack={() => navigation.goBack()}
-            />
-          )}
-        </Stack.Screen>
-      </Stack.Navigator>
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Home">
+            {({ navigation }) => (
+              <HomeScreen
+                onSelectDomain={(domainId) => navigation.navigate('DomainDetail', { domainId })}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="DomainDetail">
+            {({ navigation, route }) => (
+              <DomainDetailScreen
+                domainId={route.params.domainId}
+                onBack={() => navigation.goBack()}
+              />
+            )}
+          </Stack.Screen>
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
