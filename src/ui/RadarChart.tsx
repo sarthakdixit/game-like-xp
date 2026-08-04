@@ -14,9 +14,11 @@ export interface RadarChartProps {
 
 const CHART_SIZE = 200; // matches radarGeometry's default center (100,100) / radius 80
 // Labels wrap inside a fixed-width box (see LABEL_BOX_WIDTH) instead of running out as a single
-// line, so this only needs to fit that box — not an arbitrarily long axis label.
-const VIEWBOX_PADDING = 66;
-const LABEL_BOX_WIDTH = 64;
+// line, so this only needs to fit that box — not an arbitrarily long axis label. Sized to fit the
+// longest single unbreakable word expected in practice ("Relationships", ~75 units at this font
+// size) without splitting it mid-word; word-break still kicks in as a fallback for anything longer.
+const VIEWBOX_PADDING = 80;
+const LABEL_BOX_WIDTH = 84;
 const LABEL_BOX_HEIGHT = 34;
 
 const TEXT_ALIGN_FOR_ANCHOR: Record<'start' | 'middle' | 'end', 'left' | 'center' | 'right'> = {

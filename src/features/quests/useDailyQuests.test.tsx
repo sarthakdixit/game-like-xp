@@ -94,6 +94,10 @@ describe('useDailyQuests', () => {
 
   it('does not surface a level-up announcement for an ordinary completion', async () => {
     const client = await setupSeededDomains();
+    // Comfortably mid-level with headroom past even a boss-quest reward (60xp), so this holds
+    // regardless of which template today's random selection happens to pick — starting from 0xp
+    // wouldn't: a boss quest alone (60xp) crosses the 50xp level-2 threshold on its own.
+    await updateDomainProgress(client, UID, 'health', { level: 5, xp: 800, title: null });
 
     render(<Harness client={client} />);
     await waitFor(() => screen.getByTestId('harness-quest-health'));
